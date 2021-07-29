@@ -56,3 +56,16 @@ class Bernoulli(Distribution):
         _sample = torch.tensor(_sample, self._dtype)
         self.sample_cache = _sample
         return _sample
+
+    def _log_prob(self, sample=None):
+        if sample is None:
+            sample = self.sample_cache
+
+        if len(sample.shape) > len(self._probs.shape):
+            sample_shape = np.concatenate([[sample.shape[0]], self.batch_shape], axis=0).tolist()
+            _probs = self._probs * torch.ones(sample_shape)
+        else:
+            _probs = self._probs * torch.ones(self.batch_shape)
+
+        log_prob = sample * torch.log(_probs + 1e-8) + (1 - sample) * torch.log(1 - _probs + 1e-8)
+        return log_prob
