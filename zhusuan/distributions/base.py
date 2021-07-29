@@ -77,9 +77,91 @@ class Distribution(object):
                  use_path_derivative=False,
                  group_ndims=0,
                  **kwargs):
-                 
+
         self._dtype = dtype
         self._param_dtype = param_dtype
         self._is_continuous = is_continuous
         self._is_reparameterized = is_reparameterized
         self._use_path_derivative = use_path_derivative
+    
+        if isinstance(group_ndims, int):
+            if group_ndims < 0:
+                raise ValueError("group_ndims must be non-negative.")
+            self._group_ndims = group_ndims
+        else:
+            #TODO
+            pass
+
+    @property
+    def is_reparameterized(self):
+        """
+        Whether the gradients of samples can and are allowed to propagate back
+        into inputs, using the reparametrization trick from (Kingma, 2013).
+        """
+        return self._is_reparameterized
+
+    @property
+    def batch_shape(self):
+        """
+        The shape showing how many independent inputs (which we call batches)
+        are fed into the distribution. For batch inputs, the shape of a
+        generated sample is ``batch_shape + value_shape``.
+        """
+        #TODO
+        return self._batch_shape()
+
+    def _batch_shape(self):
+        """
+        Private method for subclasses to rewrite the :attr:`batch_shape`
+        property.
+        """
+        raise NotImplementedError()
+
+    def sample(self, n_samples=None):
+        """
+        sample(n_samples=None)
+        
+        Return samples from the distribution. When `n_samples` is None (by
+        default), one sample of shape ``batch_shape + value_shape`` is
+        generated. For a scalar `n_samples`, the returned Var has a new
+        sample dimension with size `n_samples` inserted at ``axis=0``, i.e.,
+        the shape of samples is ``[n_samples] + batch_shape + value_shape``.
+        
+        :param n_samples: A 0-D `int32` Tensor or None. How many independent
+            samples to draw from the distribution.
+        :return: A Var of samples.
+        """
+        if n_samples is None:
+            samples = self._sample(n_samples=1)
+            return samples
+        elif isinstance(n_samples, int):
+            return self._sample(n_samples)
+        else:
+            #TODO
+            pass
+
+    def _sample(self, n_samples):
+        """
+        Private method for subclasses to rewrite the :meth:`sample` method.
+        """
+        raise NotImplementedError()
+
+    def log_prob(self, given):
+        """
+        log_prob(given)
+        
+        Compute log probability density (mass) function at `given` value.
+        
+        :param given: A Var. The value at which to evaluate log probability
+            density (mass) function. Must be able to broadcast to have a shape
+            of ``(... + )batch_shape + value_shape``.
+        :return: A Var of shape ``(... + )batch_shape[:-group_ndims]``.
+        """
+        log_p = self._log_prob(given)
+        return torch.sum(log_p, [i for i in range(-self._group_ndims, 0)])
+
+    def _log_prob(self, given):
+        """
+        Private method for subclasses to rewrite the :meth:`log_prob` method.
+        """
+        raise NotImplementedError()
