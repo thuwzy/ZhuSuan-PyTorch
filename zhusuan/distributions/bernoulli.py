@@ -69,3 +69,4 @@ class Bernoulli(Distribution):
 
         log_prob = sample * torch.log(_probs + 1e-8) + (1 - sample) * torch.log(1 - _probs + 1e-8)
         return log_prob
+        #! Check it again
