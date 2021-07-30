@@ -75,7 +75,7 @@ class Normal(Distribution):
         self.sample_cache = _sample
         return _sample
 
-    def _log_prob(self, sample=None, **kwargs):
+    def _log_prob(self, sample=None):
         if sample is None:
             sample = self.sample_cache
         if len(sample.shape) > len(self._mean.shape):
