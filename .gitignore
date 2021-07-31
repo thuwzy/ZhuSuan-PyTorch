@@ -1,0 +1,21 @@
+.http.log
+*.log
+examples/data/*
+examples/result/*
+examples/*/result/*
+.idea/*
+
+__pycache__/*
+*/__pycache__/*
+
+model/*
+
+*.pyc
+*.swp
+*.swc
+*.swo
+
+# Sphinx documentation
+docs/_build/
+
+zhusuan/local/*
