@@ -93,6 +93,11 @@ class Distribution(object):
             pass
 
     @property
+    def dtype(self):
+        """The sample type of the distribution."""
+        return self._dtype
+
+    @property
     def is_reparameterized(self):
         """
         Whether the gradients of samples can and are allowed to propagate back

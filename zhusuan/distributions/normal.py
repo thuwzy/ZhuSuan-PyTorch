@@ -32,12 +32,13 @@ class Normal(Distribution):
     def __init__(self,
                  dtype=torch.float32,
                  param_dtype=torch.float32,
+                 is_continues = True,
                  is_reparameterized=True,
                  group_ndims=0,
                  **kwargs):
         super(Normal, self).__init__(dtype,
                                      param_dtype,
-                                     True,
+                                     is_continues,
                                      is_reparameterized,
                                      group_ndims=group_ndims,
                                      **kwargs)
@@ -47,9 +48,9 @@ class Normal(Distribution):
                 "Either `std` or `logstd` should be passed. It is not allowed "
                 "that both are specified or both are not.")
         elif 'logstd' in kwargs:
-            self._std = torch.exp(torch.tensor(kwargs['logstd'], dtype=dtype))
+            self._std = torch.exp(torch.as_tensor(kwargs['logstd'], dtype=dtype))
         elif 'std' in kwargs:
-            self._std = torch.tensor(kwargs['std'], dtype=dtype)
+            self._std = torch.as_tensor(kwargs['std'], dtype=dtype)
         #TODO make the input more robust. mean and std may have different sizes.
 
     def _batch_shape(self):
@@ -64,8 +65,8 @@ class Normal(Distribution):
             _std = self._std.repeat([n_samples, *_len * [1]])
         else:
             _shape = self._mean.shape
-            _mean = torch.tensor(self._mean, dtype=self._dtype)
-            _std = torch.tensor(self._std, dtype=self._dtype)
+            _mean = torch.as_tensor(self._mean, dtype=self._dtype)
+            _std = torch.as_tensor(self._std, dtype=self._dtype)
 
         if not self.is_reparameterized:
             _mean.requires_grad = False

@@ -36,7 +36,7 @@ class Bernoulli(Distribution):
                                         group_ndims=group_ndims,
                                         **kwargs)
         self._probs = kwargs['probs']
-        self._probs = torch.tensor(self._probs, dtype=self._dtype)
+        self._probs = torch.as_tensor(self._probs, dtype=self._dtype)
 
     @property
     def probs(self):
@@ -50,10 +50,11 @@ class Bernoulli(Distribution):
             sample_shape = np.concatenate([[n_samples], self.batch_shape], axis=0).tolist()
             _probs = self._probs * torch.ones(sample_shape)
         else:
-            _probs = self._probs * torch.ones(self.batch_shape)
-        _probs *= torch.tensor(_probs <= 1, self._dtype) #! Values larger than 1 are set to 0
+            _probs = self._probs# * torch.ones(self.batch_shape)
+        _probs *= torch.as_tensor(_probs <= 1, dtype=self._dtype) #! Values larger than 1 are set to 0
         _sample = torch.bernoulli(_probs)
-        _sample = torch.tensor(_sample, self._dtype)
+        _sample = torch.as_tensor(_sample, dtype=self._dtype)
+
         self.sample_cache = _sample
         return _sample
 
@@ -65,7 +66,7 @@ class Bernoulli(Distribution):
             sample_shape = np.concatenate([[sample.shape[0]], self.batch_shape], axis=0).tolist()
             _probs = self._probs * torch.ones(sample_shape)
         else:
-            _probs = self._probs * torch.ones(self.batch_shape)
+            _probs = self._probs# * torch.ones(self.batch_shape)
 
         log_prob = sample * torch.log(_probs + 1e-8) + (1 - sample) * torch.log(1 - _probs + 1e-8)
         return log_prob
