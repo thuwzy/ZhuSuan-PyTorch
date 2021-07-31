@@ -92,10 +92,10 @@ class Distribution(object):
             #TODO
             pass
 
-    @property
-    def dtype(self):
-        """The sample type of the distribution."""
-        return self._dtype
+    # @property
+    # def dtype(self):
+    #     """The sample type of the distribution."""
+    #     return self._dtype
 
     @property
     def is_reparameterized(self):

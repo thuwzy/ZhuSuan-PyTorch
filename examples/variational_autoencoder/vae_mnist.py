@@ -86,7 +86,7 @@ class Variational(BayesianNet):
 
 
 def main():
-    epoch_size = 1
+    epoch_size = 10
     batch_size = 64
 
     z_dim = 40
@@ -112,21 +112,22 @@ def main():
             if x.shape[0] != batch_size:
                 break
             loss = model({'x': x})
+            optimizer.zero_grad()
             loss.backward()
             optimizer.step()
             if (step + 1) % 100 == 0:
-                print("Epoch[{}/{}], Step [{}/{}], Loss: {:.4f}".format(epoch + 1, epoch_size, step + 1, num_batches,
-                                                                        float(loss.clone().detach().numpy())))
+                print("Epoch[{}/{}], Step [{}/{}], Loss: {:.4f}".format(epoch + 1, epoch_size, step + 1, num_batches,loss))
+                                                                        #float(loss.clone().detach().numpy())))
 
     batch_x = x_test[0:64]
     batch_x = torch.as_tensor(batch_x)
     nodes_q = variational({'x': batch_x}).nodes
     z = nodes_q['z'].tensor
     cache = generator({'z': z}).cache
-    sample = cache['x_mean'].numpy()
+    sample = cache['x_mean'].detach().numpy()
 
     cache = generator({}).cache
-    sample_gen = cache['x_mean'].numpy()
+    sample_gen = cache['x_mean'].detach().numpy()
 
     result_fold = './result'
     if not os.path.exists(result_fold):

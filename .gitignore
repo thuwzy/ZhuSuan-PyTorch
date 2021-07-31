@@ -9,6 +9,7 @@ __pycache__/*
 */__pycache__/*
 
 model/*
+result/*
 
 *.pyc
 *.swp

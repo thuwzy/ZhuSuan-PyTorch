@@ -51,7 +51,8 @@ class Bernoulli(Distribution):
             _probs = self._probs * torch.ones(sample_shape)
         else:
             _probs = self._probs# * torch.ones(self.batch_shape)
-        _probs *= torch.as_tensor(_probs <= 1, dtype=self._dtype) #! Values larger than 1 are set to 0
+
+        #_probs *= torch.tensor(_probs <= 1, dtype=self._dtype) #! Values larger than 1 are set to 0
         _sample = torch.bernoulli(_probs)
         _sample = torch.as_tensor(_sample, dtype=self._dtype)
 

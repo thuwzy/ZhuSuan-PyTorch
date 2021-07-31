@@ -41,7 +41,6 @@ class StochasticTensor(object):
         self._bn = bn
         self._name = name
         self._dist = dist
-        self._dtype = dist.dtype
         self._n_samples = kwargs.get("n_samples", None)
         self._observation = observation
         super(StochasticTensor, self).__init__()
@@ -132,15 +131,15 @@ class StochasticTensor(object):
 
     def log_prob(self, sample=None):
         _log_probs = self._dist.log_prob(sample)
-        if self._reduce_mean_dims and max(self._reduce_mean_dims)<len(_log_probs.shape):#!
+        if self._reduce_mean_dims:
             _log_probs = torch.mean(_log_probs, self._reduce_mean_dims, keepdim=True)
 
-        if self._reduce_sum_dims and max(self._reduce_sum_dims)<len(_log_probs.shape):#!
+        if self._reduce_sum_dims:
             _log_probs = torch.sum(_log_probs, self._reduce_sum_dims, keepdim=True)
 
         if self._reduce_mean_dims or self._reduce_sum_dims:
-            _m = self._reduce_mean_dims if self._reduce_mean_dims and max(self._reduce_mean_dims)<len(_log_probs.shape) else []
-            _s = self._reduce_sum_dims if self._reduce_sum_dims and max(self._reduce_sum_dims)<len(_log_probs.shape) else []
+            _m = self._reduce_mean_dims if self._reduce_mean_dims else []
+            _s = self._reduce_sum_dims if self._reduce_sum_dims else []
             _dims = [*_m, *_s]
             _dims.sort(reverse=True)
             for d in _dims:
