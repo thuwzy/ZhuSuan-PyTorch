@@ -163,7 +163,10 @@ class Distribution(object):
         :return: A Var of shape ``(... + )batch_shape[:-group_ndims]``.
         """
         log_p = self._log_prob(given)
-        return torch.sum(log_p, [i for i in range(-self._group_ndims, 0)])
+        if self._group_ndims > 0:
+            return torch.sum(log_p, [i for i in range(-self._group_ndims, 0)])
+        else:
+            return log_p
 
     def _log_prob(self, given):
         """
