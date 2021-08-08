@@ -125,7 +125,7 @@ def main():
                 assert (w.shape[0] == lb_samples)
                 esti_logstd = 0.5 * torch.log(torch.mean(w * w, [0]))
                 net.w_logstds[i] = esti_logstd.detach()
-                #net.w_logstds[i].requires_grad = True
+                # net.w_logstds[i].requires_grad = True
 
             if (step + 1) % num_batches == 0:
                 net.forward({**w_samples, 'x': x, 'y': y})
