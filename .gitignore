@@ -20,3 +20,4 @@ result/*
 docs/_build/
 
 zhusuan/local/*
+zhusuan_torch.egg-info/*
