@@ -41,6 +41,7 @@ class SGMCMC(nn.Module):
 
             for i in range(len(self._var_list)):
                 self._var_list[i] = self._var_list[i].detach()
+                self._var_list[i].requires_grad = True
             return sample_
 
         for s in range(step):

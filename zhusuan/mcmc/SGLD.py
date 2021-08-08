@@ -25,9 +25,11 @@ class SGLD(SGMCMC):
         bn.forward(observed_)
 
         log_joint_ = bn.log_joint()
+
         grad = torch.autograd.grad(log_joint_, self._var_list)
 
         for i, _ in enumerate(grad):
             epsilon = torch.normal(0., math.sqrt(self.lr), size=self._var_list[i].shape)
             self._var_list[i] = self._var_list[i] + 0.5 * self.lr * grad[i] + epsilon
             self._var_list[i] = self._var_list[i].detach()
+            self._var_list[i].requires_grad = True
