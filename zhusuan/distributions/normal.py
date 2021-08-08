@@ -59,7 +59,7 @@ class Normal(Distribution):
     def _sample(self, n_samples=1):
         if n_samples > 1:
             _shape = self._mean.shape
-            _shape = [n_samples] + _shape
+            _shape = torch.Size([n_samples]) + _shape
             _len = len(self._mean.shape)
             _mean = self._mean.repeat([n_samples, *_len * [1]])
             _std = self._std.repeat([n_samples, *_len * [1]])
