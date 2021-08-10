@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+from torch._C import device
 
 from zhusuan.distributions.base import Distribution
 
@@ -35,12 +36,14 @@ class Normal(Distribution):
                  is_continues = True,
                  is_reparameterized=True,
                  group_ndims=0,
+                 device = torch.device('cpu'),
                  **kwargs):
         super(Normal, self).__init__(dtype,
                                      param_dtype,
                                      is_continues,
                                      is_reparameterized,
                                      group_ndims=group_ndims,
+                                     device=device,
                                      **kwargs)
         self._mean = kwargs['mean']
         if ('logstd' in kwargs) == ('std' in kwargs):
@@ -48,9 +51,9 @@ class Normal(Distribution):
                 "Either `std` or `logstd` should be passed. It is not allowed "
                 "that both are specified or both are not.")
         elif 'logstd' in kwargs:
-            self._std = torch.exp(torch.as_tensor(kwargs['logstd'], dtype=dtype))
+            self._std = torch.exp(torch.as_tensor(kwargs['logstd'], dtype=dtype)).to(self.device)
         elif 'std' in kwargs:
-            self._std = torch.as_tensor(kwargs['std'], dtype=dtype)
+            self._std = torch.as_tensor(kwargs['std'], dtype=dtype).to(self.device)
         #TODO make the input more robust. mean and std may have different sizes.
 
     def _batch_shape(self):

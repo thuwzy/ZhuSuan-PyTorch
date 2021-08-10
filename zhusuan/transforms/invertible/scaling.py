@@ -46,10 +46,11 @@ class Scaling(InvertibleTransform):
         :style: unsrtalpha
         :keyprefix: scaling-
     """
-    def __init__(self, n_dim):
+    def __init__(self, n_dim, device = torch.device('cpu')):
         super().__init__()
+        self.device = device
         # self.log_scale = nn.init.constant(shape=[1, n_dim], dtype=torch.float32)
-        self.log_scale = torch.zeros(1, n_dim, dtype=torch.float32)
+        self.log_scale = torch.zeros(1, n_dim, dtype=torch.float32).to(self.device)
 
     def _forward(self, x, **kwargs):
         log_detJ = self.log_scale.clone()

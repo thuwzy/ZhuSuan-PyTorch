@@ -70,6 +70,7 @@ class AdditiveCoupling(InvertibleTransform):
         self.mask = mask
     
     def _forward(self, x, **kwargs):
+        # print("x type:", x.device, "mask type:", self.mask.device)
         x1, x2 = self.mask * x, (1 - self.mask) * x
         shift = self.nn(x1)
         z1, z2 = x1, x2 + shift * (1. - self.mask)
