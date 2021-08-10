@@ -14,17 +14,17 @@ from zhusuan.flow import Flow
 
 from examples.utils import load_mnist_realval, save_img
 
-device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-# device = torch.device('cpu')
+# device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cpu')
 
 class NICE(BayesianNet):
     def __init__(self, num_coupling, in_out_dim, mid_dim, num_hidden, device = torch.device('cuda')):
         super().__init__()
         self.in_out_dim = in_out_dim
-        masks = get_coupling_mask(in_out_dim, 1, num_coupling, device = device)
+        masks = get_coupling_mask(in_out_dim, 1, num_coupling)
         coupling_layer = [AdditiveCoupling(in_out_dim, mid_dim, num_hidden, masks[i])
                      for i in range(num_coupling)]
-        scaling_layer = Scaling(in_out_dim, device)
+        scaling_layer = Scaling(in_out_dim)
         self.flow = Sequential(coupling_layer + [scaling_layer])
         
         loc = torch.zeros([in_out_dim]).to(device)
@@ -33,14 +33,12 @@ class NICE(BayesianNet):
         self.sn('Logistic',
                 name='z',
                 loc=loc,
-                scale=scale,
-                device = device)
+                scale=scale)
         self.sn('Flow',
                 name='x',
                 latent=self.nodes['z'].dist,
                 transform=self.flow,
-                n_samples=-1,
-                device = device) # Not sample when initializing
+                n_samples=-1) # Not sample when initializing
     
     def sample(self, n_samples=1):
         return self.nodes['x'].dist.sample(n_samples)
@@ -93,7 +91,7 @@ def main():
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            stats.append(loss.cpu().clone().detach().numpy())
+            stats.append(loss.clone().detach().numpy())
         print("Epoch:[{}/{}], Log Likelihood: {:.4f}".format(
             epoch + 1, epoch_size, np.mean(np.array(stats))
         ))

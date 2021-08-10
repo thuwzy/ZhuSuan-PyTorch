@@ -3,7 +3,7 @@ import torch.nn as nn
 
 from zhusuan.transforms.invertible import InvertibleTransform
 
-def get_coupling_mask(n_dim, n_channel, n_mask, split_type='ChessBoard', device = torch.device('cpu')):
+def get_coupling_mask(n_dim, n_channel, n_mask, split_type='ChessBoard'):
     """
     Mask generator for coupling layers.
 
@@ -19,8 +19,8 @@ def get_coupling_mask(n_dim, n_channel, n_mask, split_type='ChessBoard', device 
             if n_channel == 1:
                 mask = torch.arange(0, n_dim, dtype=torch.float32) % 2
                 for i in range(n_mask):
-                    masks.append(mask.to(device))
-                    mask = (1. - mask)
+                    masks.append(mask)
+                    mask = 1. - mask
         else:
             raise NotImplementedError()
         return masks
@@ -70,7 +70,7 @@ class AdditiveCoupling(InvertibleTransform):
         self.mask = mask
     
     def _forward(self, x, **kwargs):
-        #print("x type:", x.device, "mask type:", self.mask.device)
+        # print("x type:", x.device, "mask type:", self.mask.device)
         x1, x2 = self.mask * x, (1 - self.mask) * x
         shift = self.nn(x1)
         z1, z2 = x1, x2 + shift * (1. - self.mask)
