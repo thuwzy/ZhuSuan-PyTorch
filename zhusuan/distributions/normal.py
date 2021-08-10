@@ -74,7 +74,7 @@ class Normal(Distribution):
         if not self.is_reparameterized:
             _mean.requires_grad = False
             _std.requires_grad = False
-        epsilon = torch.normal(0., 1., size=_shape).to(self.device)
+        epsilon = torch.normal(0., 1., size=_shape)
         _sample = _mean + _std * epsilon
         self.sample_cache = _sample
         return _sample

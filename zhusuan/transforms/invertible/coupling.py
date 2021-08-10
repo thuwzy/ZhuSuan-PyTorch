@@ -61,7 +61,8 @@ class AdditiveCoupling(InvertibleTransform):
             self.nn += [nn.Linear(in_out_dim, mid_dim),
                         nn.ReLU()]
             for _ in range(hidden - 1):
-                self.nn += [nn.Linear(mid_dim, mid_dim), nn.ReLU()]
+                self.nn += [nn.Linear(mid_dim, mid_dim),
+                            nn.ReLU()]
             self.nn += [nn.Linear(mid_dim, in_out_dim)]
             self.nn = nn.Sequential(*self.nn)
         else:

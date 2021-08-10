@@ -134,7 +134,7 @@ def save_image(var, filename, nrow=8, padding=2, pad_value=0):
     num_channels = var.shape[1]
     grid = Image.new('L', (width * xmaps, height * ymaps))
     k = 0
-    var = (var * 255 + 0.5).clip(0, 255).transpose([0, 2, 3, 1])
+    var = (var * 255 + 0.5).safe_clip(0, 255).transpose([0, 2, 3, 1])
     for y in range(ymaps):
         for x in range(xmaps):
             if k >= nmaps:

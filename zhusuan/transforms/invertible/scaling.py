@@ -50,17 +50,11 @@ class Scaling(InvertibleTransform):
         super().__init__()
         self.device = device
         # self.log_scale = nn.init.constant(shape=[1, n_dim], dtype=torch.float32)
-        self.log_scale = nn.parameter.Parameter(torch.zeros(1, n_dim, dtype=torch.float32).to(self.device)) #!TODO
-        #self.log_scale = nn.parameter.Parameter(torch.nn.init.uniform_(torch.zeros(1, n_dim, dtype=torch.float32).to(self.device), -1., 1.)) #!TODO
-        #self.log_scale = torch.zeros(1, n_dim, dtype=torch.float32).to(self.device)
-        #print(self.log_scale)
-        # self.log_scale.requires_grad = True
-        # print(self.log_scale.requires_grad)
+        self.log_scale = torch.zeros(1, n_dim, dtype=torch.float32).to(self.device) #!TODO
 
     def _forward(self, x, **kwargs):
         log_detJ = self.log_scale.clone()
         x *= torch.exp(self.log_scale)
-        #print(self.log_scale)
         return x, log_detJ
 
     def _inverse(self, z, **kwargs):

@@ -12,13 +12,13 @@ from zhusuan.transforms.invertible import *
 from zhusuan.framework import BayesianNet
 from zhusuan.flow import Flow
 
-from examples.utils import load_mnist_realval, save_img, save_image
+from examples.utils import load_mnist_realval, save_img
 
 device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # device = torch.device('cpu')
 
 class NICE(BayesianNet):
-    def __init__(self, num_coupling, in_out_dim, mid_dim, num_hidden, device):
+    def __init__(self, num_coupling, in_out_dim, mid_dim, num_hidden, device = torch.device('cuda')):
         super().__init__()
         self.in_out_dim = in_out_dim
         masks = get_coupling_mask(in_out_dim, 1, num_coupling, device = device)
@@ -54,7 +54,7 @@ def main():
     print(device)
 
     batch_size = 200
-    epoch_size = 1000
+    epoch_size = 20
     sample_size = 64
     coupling = 4
     
@@ -67,8 +67,7 @@ def main():
     model = NICE(num_coupling=coupling,
                  in_out_dim=full_dim,
                  mid_dim=mid_dim,
-                 num_hidden=hidden,
-                 device = device)
+                 num_hidden=hidden)
 
     model.to(device)
     
@@ -82,9 +81,8 @@ def main():
     len_ = x_train.shape[0]
     num_batches = math.ceil(len_ / batch_size)
 
-    
+    model.train()
     for epoch in range(epoch_size):
-        model.train()
         stats = []
         for step in range(num_batches):
             x = torch.as_tensor(x_train[step * batch_size:min((step + 1) * batch_size, len_)])
@@ -99,36 +97,16 @@ def main():
         print("Epoch:[{}/{}], Log Likelihood: {:.4f}".format(
             epoch + 1, epoch_size, np.mean(np.array(stats))
         ))
-        if epoch%10 == 0:
-            model.eval()
-            sample_x = model.sample(n_samples=sample_size)
-            result_fold = './result'
-            if not os.path.exists(result_fold):
-                os.mkdir(result_fold)
-            save_img((sample_x).cpu().detach().numpy(), os.path.join(result_fold, str(epoch)+'sample-NICE.png'))
-            
     
     model.eval()
     sample_x = model.sample(n_samples=sample_size)
     # print(sample_x.shape)
     # sample_x = torch.reshape(sample_x, [-1, 784])
     # print(sample_x.shape)
-    # sample_x = torch.reshape(sample_x, [-1, 1, 28, 28])
     result_fold = './result'
     if not os.path.exists(result_fold):
         os.mkdir(result_fold)
-    save_img((sample_x).cpu().detach().numpy(), os.path.join(result_fold, 'sample-NICE.png'))
-
-    x = torch.as_tensor(x_train[0:64])
-    save_img((x).cpu().detach().numpy(), os.path.join(result_fold, 'ox.png'))
-    x = torch.reshape(x, [-1, full_dim])
-    z = model.flow.forward(x)[0][0]
-    print(z)
-    save_img((z).cpu().detach().numpy(), os.path.join(result_fold, 'oz0.png'))
-    z = model.flow.forward(torch.nn.init.constant_(z,0), inverse=True)[0]
-    print(z)
-    print(z.shape)
-    save_img((z).cpu().detach().numpy(), os.path.join(result_fold, 'oz1.png'))
+    save_img(sample_x.detach().numpy(), os.path.join(result_fold, 'sample-NICE.png'))
 
 if __name__ == '__main__':
     main()
