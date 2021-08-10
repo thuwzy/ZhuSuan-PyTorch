@@ -11,7 +11,7 @@ class Sequential(Transform):
     """
     def __init__(self, module):
         super().__init__()
-        self.seq_modules = nn.Sequential(*module)
+        self.seq_modules = nn.ModuleList(module)
     
     def _forward(self, *x, **kwargs):
         """
@@ -30,10 +30,11 @@ class Sequential(Transform):
                 log_detJ.append(x[-1])
             if isinstance(x[0], tuple):
                 x = x[0]
+                #print("fuck")
             else:
                 x = x[:len(x) - 1]
             assert isinstance(x, tuple)
-        return x, sum(log_detJ) if log_detJ else torch.zeros([1])
+        return x, sum(log_detJ) if log_detJ else torch.zeros([1]).to(torch.device("cuda"))
     
     def _inverse(self, *z, **kwargs):
         """

@@ -27,8 +27,8 @@ class Logistic(Distribution):
                                        group_ndims=group_ndims,
                                        device = device,
                                        **kwargs)
-        self._loc = torch.as_tensor(kwargs['loc'], dtype = self._dtype).to(self.device) if type(kwargs['loc']) in [int, float] else kwargs['loc']
-        self._scale = torch.as_tensor(kwargs['scale'], dtype = self._dtype).to(self.device) if type(kwargs['scale']) in [int, float] else kwargs['scale']
+        self._loc = torch.as_tensor(kwargs['loc'], dtype = self._dtype).to(self.device)
+        self._scale = torch.as_tensor(kwargs['scale'], dtype = self._dtype).to(self.device)
     
     def _batch_shape(self):
         return self._loc.shape
@@ -66,11 +66,11 @@ class Logistic(Distribution):
         else:
             _loc = self._loc
             _scale = self._scale
-        if self.is_reparameterized:
+        if not self.is_reparameterized:
             _loc.requires_grad = False
             _scale.requires_grad = False
         z = (sample - _loc) / _scale
-        return -z - 2. * torch.nn.Softplus()(-z) - torch.log(_scale)
+        return -z - 2. * torch.nn.functional.softplus(-z) - torch.log(_scale)
 
 
         
