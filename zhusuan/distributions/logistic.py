@@ -13,8 +13,8 @@ class Logistic(Distribution):
     :param is_reparameterized: A Bool. If True, gradients on samples from this distribution are allowed to propagate into inputs, using the reparametrization trick from (Kingma, 2013).
     """
     def __init__(self,
-                dtype='float32',
-                param_dtype='float32',
+                dtype=torch.float32,
+                param_dtype=torch.float32,
                 is_continues=True,
                 is_reparameterized=True,
                 group_ndims=0,

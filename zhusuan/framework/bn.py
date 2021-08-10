@@ -3,6 +3,7 @@ import torch.nn as nn
 
 from zhusuan.framework.stochastic_tensor import StochasticTensor
 from zhusuan.distributions import *
+from zhusuan.flow import *
 
 class BayesianNet(nn.Module):
     def __init__(self, observed=None):

@@ -9,9 +9,9 @@ class Sequential(Transform):
 
     :param modules: A list of :class:`~zhusuan.transforms.base.Transform`.
     """
-    def __init__(self, modules):
+    def __init__(self, module):
         super().__init__()
-        self.modules = nn.Sequential(modules)
+        self.seq_modules = nn.Sequential(*module)
     
     def _forward(self, *x, **kwargs):
         """
@@ -21,8 +21,9 @@ class Sequential(Transform):
                  Jacobian matrix.
         """
         log_detJ = []
-        for i in range(len(self.modules)):
-            x = self.modules[i](*x, inverse=False, **kwargs)
+        #print(self.seq_modules)
+        for i in range(len(self.seq_modules)):
+            x = self.seq_modules[i](*x, inverse=False, **kwargs)
             assert isinstance(x, tuple)
             assert len(x) >= 2
             if x[-1] is not None:
@@ -41,8 +42,8 @@ class Sequential(Transform):
         :return: The transformed Var.
         """
         # No log_det(jacobian) in inverse process
-        for i in reversed(range(len(self.modules))):
-            z = self.modules[i](*z, inverse=True, **kwargs)
+        for i in reversed(range(len(self.seq_modules))):
+            z = self.seq_modules[i](*z, inverse=True, **kwargs)
             assert isinstance(z, tuple)
             assert len(z) >= 2
             assert z[-1] is None
