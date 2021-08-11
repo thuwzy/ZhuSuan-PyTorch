@@ -1,7 +1,7 @@
 Contributing
 ============
 
-We always welcome contributions to help make ZhuSuan-Jittor better. If you would like
+We always welcome contributions to help make ZhuSuan-Torch better. If you would like
 to contribute, please check out the
 `guidelines <https://github.com/thu-ml/zhusuan/blob/master/CONTRIBUTING.md>`_
 here. Below are an incomplete list of our contributors (find more on
