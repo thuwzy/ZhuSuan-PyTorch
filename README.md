@@ -2,6 +2,11 @@
 
 # Zhusuan-PyTorch
 
+<div align="center">
+  <a href="https://zhusuan-pytorch.readthedocs.io/en/latest/?badge=latest"> <img width="750px" height="auto" 
+    src="docs/_static/images/zhusuan-logo-h.png"></a>
+</div>
+
 ---
 
 ZhuSuan-PyTorch is a python probabilistic programming library for
