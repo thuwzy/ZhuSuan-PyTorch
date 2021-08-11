@@ -1,7 +1,7 @@
 Variational Autoencoders
 ========================
 
-**Variational Auto-Encoders** (VAE) :cite:`vae-kingma2013auto` is one of the
+**Variational Auto-Encoders** (VAE) is one of the
 most widely used deep generative models.
 In this tutorial, we show how to implement VAE in ZhuSuan step by step.
 The full script is at
