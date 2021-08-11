@@ -1,4 +1,4 @@
-[![Documentation Status](https://zhusuan-pytorch.readthedocs.io/en/latest/?badge=latest)](https://zhusuan-pytorch.readthedocs.io/)
+[![Documentation Status](https://readthedocs.org/projects/zhusuan-pytorch/badge/?version=latest)](https://zhusuan-pytorch.readthedocs.io/en/latest/?badge=latest)
 
 # Zhusuan-PyTorch
 
