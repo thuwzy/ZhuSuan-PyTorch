@@ -18,8 +18,7 @@ supervised tasks, ZhuSuan-PyTorch provides deep learning style primitives and
 algorithms for building probabilistic models and applying Bayesian inference.
 The supported inference algorithms include:
 
-* Variational inference with programmable variational posteriors, various
-objectives and advanced gradient estimators (SGVB, etc.).
+* Variational inference with programmable variational posteriors, various objectives and advanced gradient estimators (SGVB, etc.).
 
 * MCMC samplers: Stochastic Gradient MCMC (sgmcmc), etc.
 
