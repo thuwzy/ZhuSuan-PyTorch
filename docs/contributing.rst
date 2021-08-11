@@ -7,7 +7,12 @@ to contribute, please check out the
 here. Below are an incomplete list of our contributors (find more on
 `this page <https://github.com/thu-ml/zhusuan/graphs/contributors>`_).
 
+ZhuSuan-PyTorch
+
 * Zhengyi Wang (`thuwzy <https://github.com/thuwzy>`_)
+
+ZhuSuan on other platforms
+
 * Guande He (`rubbybbs <https://github.com/rubbybbs>`_)
 * Yong Ren (`McGrady00H <https://github.com/mcgrady00h>`_)
 * Jianfei Chen (`cjf00000 <https://github.com/cjf00000>`_)
