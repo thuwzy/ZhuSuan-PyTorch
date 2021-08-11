@@ -25,7 +25,7 @@ which both fits to the training data and reasons about the uncertainty of
 its own prediction on test data.
 In this tutorial, we show how to implement BNNs in ZhuSuan.
 The full script for this tutorial is at
-`examples/bayesian_neural_nets/bnn_vi.py <https://github.com/McGrady00H/Zhusuan-Jittor/blob/main/examples/bayesian_neural_nets/bnn_vi.py>`_.
+`examples/bayesian_neural_nets/bnn_vi.py <https://github.com/thuwzy/ZhuSuan-PyTorch/blob/main/examples/bayesian_neural_nets/bnn_vi.py>`_.
 
 We use a regression dataset called
 `Boston housing <https://archive.ics.uci.edu/ml/machine-learning-databases/housing/>`_.
@@ -375,7 +375,7 @@ This can also be computed by Monte Carlo estimation
 
 To be noted, as we usually standardized the data to make
 them have unit variance at beginning (check the full script
-`examples/bayesian_neural_nets/bnn_vi.py <https://github.com/McGrady00H/Zhusuan-Jittor/blob/main/examples/bayesian_neural_nets/bnn_vi.py>`_),
+`examples/bayesian_neural_nets/bnn_vi.py <https://github.com/thuwzy/ZhuSuan-PyTorch/blob/main/examples/bayesian_neural_nets/bnn_vi.py>`_),
 we need to count its effect in our evaluation formulas.
 RMSE is proportional to the amplitude, therefore the final RMSE should be
 multiplied with the standard deviation.
