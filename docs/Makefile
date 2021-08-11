@@ -16,7 +16,9 @@ help:
 .PHONY: help Makefile api
 
 api:
+	@echo "0"
 	sphinx-apidoc -fMeT ../zhusuan -o api
+	@echo "1"
 	for f in api/*.rst; do\
         	perl -pi -e 's/(module|package)$$// if $$. == 1' $$f ;\
 	done
