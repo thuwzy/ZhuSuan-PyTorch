@@ -1,4 +1,4 @@
-zhusuan.distributions.base module
+zhusuan.distributions.base 
 =================================
 
 .. automodule:: zhusuan.distributions.base

@@ -1,4 +1,4 @@
-zhusuan.variational.elbo module
+zhusuan.variational.elbo 
 ===============================
 
 .. automodule:: zhusuan.variational.elbo

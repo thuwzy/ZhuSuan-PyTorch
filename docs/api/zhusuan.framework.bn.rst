@@ -1,4 +1,4 @@
-zhusuan.framework.bn module
+zhusuan.framework.bn 
 ===========================
 
 .. automodule:: zhusuan.framework.bn

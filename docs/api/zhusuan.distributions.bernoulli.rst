@@ -1,4 +1,4 @@
-zhusuan.distributions.bernoulli module
+zhusuan.distributions.bernoulli 
 ======================================
 
 .. automodule:: zhusuan.distributions.bernoulli

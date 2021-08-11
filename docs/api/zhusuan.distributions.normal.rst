@@ -1,4 +1,4 @@
-zhusuan.distributions.normal module
+zhusuan.distributions.normal 
 ===================================
 
 .. automodule:: zhusuan.distributions.normal

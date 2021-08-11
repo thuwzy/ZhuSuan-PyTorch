@@ -1,4 +1,4 @@
-zhusuan package
+zhusuan 
 ===============
 
 .. automodule:: zhusuan

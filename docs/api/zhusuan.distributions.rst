@@ -1,4 +1,4 @@
-zhusuan.distributions package
+zhusuan.distributions 
 =============================
 
 .. automodule:: zhusuan.distributions

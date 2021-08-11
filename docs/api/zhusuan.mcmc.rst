@@ -1,4 +1,4 @@
-zhusuan.mcmc package
+zhusuan.mcmc 
 ====================
 
 .. automodule:: zhusuan.mcmc

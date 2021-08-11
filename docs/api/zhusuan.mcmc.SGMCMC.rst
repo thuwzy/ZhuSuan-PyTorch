@@ -1,4 +1,4 @@
-zhusuan.mcmc.SGMCMC module
+zhusuan.mcmc.SGMCMC 
 ==========================
 
 .. automodule:: zhusuan.mcmc.SGMCMC

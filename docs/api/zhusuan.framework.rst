@@ -1,4 +1,4 @@
-zhusuan.framework package
+zhusuan.framework 
 =========================
 
 .. automodule:: zhusuan.framework

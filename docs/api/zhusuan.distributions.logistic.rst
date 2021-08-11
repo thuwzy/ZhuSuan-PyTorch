@@ -1,4 +1,4 @@
-zhusuan.distributions.logistic module
+zhusuan.distributions.logistic 
 =====================================
 
 .. automodule:: zhusuan.distributions.logistic

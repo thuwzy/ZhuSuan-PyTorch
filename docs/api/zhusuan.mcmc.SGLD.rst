@@ -1,4 +1,4 @@
-zhusuan.mcmc.SGLD module
+zhusuan.mcmc.SGLD 
 ========================
 
 .. automodule:: zhusuan.mcmc.SGLD

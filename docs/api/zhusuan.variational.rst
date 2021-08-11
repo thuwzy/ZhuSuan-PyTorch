@@ -1,4 +1,4 @@
-zhusuan.variational package
+zhusuan.variational 
 ===========================
 
 .. automodule:: zhusuan.variational

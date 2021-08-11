@@ -1,4 +1,4 @@
-zhusuan.framework.stochastic\_tensor module
+zhusuan.framework.stochastic\_tensor 
 ===========================================
 
 .. automodule:: zhusuan.framework.stochastic_tensor
