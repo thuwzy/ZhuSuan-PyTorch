@@ -70,4 +70,4 @@ If you find ZhuSuan-PyTorch useful, please cite it in your publications.
 ## Contributing
 
 We always welcome contributions to help make ZhuSuan-PyTorch better. If you would like 
-to contribute, please check out the guidelines [here](CONTRIBUTING.md).
+to contribute, please check out the guidelines [here](https://zhusuan-pytorch.readthedocs.io/en/latest/contributing.html).
