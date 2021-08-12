@@ -13,8 +13,8 @@ class Bernoulli(Distribution):
         .. math:: \\mathrm{logits} = \\log \\frac{p}{1 - p}
 
     :param dtype: The value type of samples from the distribution. Can be
-        int (`tf.int16`, `tf.int32`, `tf.int64`) or float (`tf.float16`,
-        `tf.float32`, `tf.float64`). Default is `int32`.
+        int (`torch.int16`, `torch.int32`, `torch.int64`) or float (`torch.float16`,
+        `torch.float32`, `torch.float64`). Default is `int32`.
     :param group_ndims: A 0-D `int32` Tensor representing the number of
         dimensions in `batch_shape` (counted from the end) that are grouped
         into a single event, so that their probabilities are calculated
