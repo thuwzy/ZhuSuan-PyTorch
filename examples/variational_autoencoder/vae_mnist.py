@@ -86,6 +86,8 @@ class Variational(BayesianNet):
 
 
 def main():
+    device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
     epoch_size = 10
     batch_size = 64
 
@@ -96,18 +98,21 @@ def main():
 
     generator = Generator(x_dim, z_dim, batch_size)
     variational = Variational(x_dim, z_dim, batch_size)
-    model = ELBO(generator, variational)
+    model = ELBO(generator, variational).to(device)
 
     optimizer = torch.optim.Adam(model.parameters(), lr)
 
     x_train, t_train, x_valid, t_valid, x_test, t_test = load_mnist_realval()
+
+    x_train = torch.as_tensor(x_train).to(device)
+    x_test = torch.as_tensor(x_test).to(device)
 
     len_ = x_train.shape[0]
     num_batches = math.ceil(len_ / batch_size)
 
     for epoch in range(epoch_size):
         for step in range(num_batches):
-            x = torch.as_tensor(x_train[step * batch_size:min((step + 1) * batch_size, len_)])
+            x = x_train[step * batch_size:min((step + 1) * batch_size, len_)]
             x = torch.reshape(x, [-1, x_dim])
             if x.shape[0] != batch_size:
                 break
@@ -120,18 +125,19 @@ def main():
                                                                         #float(loss.clone().detach().numpy())))
 
     batch_x = x_test[0:64]
-    batch_x = torch.as_tensor(batch_x)
     nodes_q = variational({'x': batch_x}).nodes
     z = nodes_q['z'].tensor
     cache = generator({'z': z}).cache
-    sample = cache['x_mean'].detach().numpy()
+    sample = cache['x_mean'].cpu().detach().numpy()
 
     cache = generator({}).cache
-    sample_gen = cache['x_mean'].detach().numpy()
+    sample_gen = cache['x_mean'].cpu().detach().numpy()
 
     result_fold = './result'
     if not os.path.exists(result_fold):
         os.mkdir(result_fold)
+
+    batch_x = batch_x.cpu().detach().numpy()
 
     save_img(batch_x, os.path.join(result_fold, 'origin_x_.png'))
     save_img(sample, os.path.join(result_fold, 'reconstruct_x_.png'))

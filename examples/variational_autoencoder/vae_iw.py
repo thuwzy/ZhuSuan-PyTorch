@@ -95,6 +95,7 @@ class Variational(BayesianNet):
 
 def main():
     device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
     epoch_size = 10
     batch_size = 64
 
@@ -134,7 +135,6 @@ def main():
                                                                         #float(loss.clone().detach().numpy())))
 
     batch_x = x_test[0:64]
-    batch_x = torch.as_tensor(batch_x)
     nodes_q = variational({'x': batch_x}).nodes
     z = nodes_q['z'].tensor
     cache = generator({'z': z}).cache
