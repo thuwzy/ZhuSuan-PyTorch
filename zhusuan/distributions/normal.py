@@ -35,22 +35,24 @@ class Normal(Distribution):
                  is_continues = True,
                  is_reparameterized=True,
                  group_ndims=0,
+                 device=torch.device('cpu'),
                  **kwargs):
         super(Normal, self).__init__(dtype,
                                      param_dtype,
                                      is_continues,
                                      is_reparameterized,
                                      group_ndims=group_ndims,
+                                     device=device,
                                      **kwargs)
-        self._mean = kwargs['mean']
+        self._mean = kwargs['mean'].to(self.device)
         if ('logstd' in kwargs) == ('std' in kwargs):
             raise ValueError(
                 "Either `std` or `logstd` should be passed. It is not allowed "
                 "that both are specified or both are not.")
         elif 'logstd' in kwargs:
-            self._std = torch.exp(torch.as_tensor(kwargs['logstd'], dtype=dtype))
+            self._std = torch.exp(torch.as_tensor(kwargs['logstd'], dtype=dtype)).to(self.device)
         elif 'std' in kwargs:
-            self._std = torch.as_tensor(kwargs['std'], dtype=dtype)
+            self._std = torch.as_tensor(kwargs['std'], dtype=dtype).to(self.device)
         #TODO make the input more robust. mean and std may have different sizes.
 
     def _batch_shape(self):
@@ -71,7 +73,7 @@ class Normal(Distribution):
         if not self.is_reparameterized:
             _mean.requires_grad = False
             _std.requires_grad = False
-        epsilon = torch.normal(0., 1., size=_shape)
+        epsilon = torch.normal(0., 1., size=_shape).to(self.device)
         _sample = _mean + _std * epsilon
         self.sample_cache = _sample
         return _sample
@@ -90,8 +92,8 @@ class Normal(Distribution):
         if not self.is_reparameterized:
             _mean.requires_grad = False
             _std.requires_grad = False
-        logstd = torch.log(_std)
-        c = -0.5 * np.log(2 * np.pi)
+        logstd = torch.log(_std).to(self.device)
+        c = torch.tensor(-0.5 * np.log(2 * np.pi)).to(self.device)
         precision = torch.exp(-2 * logstd)
         log_prob = c - logstd - 0.5 * precision * ((sample - _mean) ** 2)
         return log_prob

@@ -1,4 +1,5 @@
 import torch
+from torch._C import device
 import torch.nn as nn
 
 from zhusuan.framework.stochastic_tensor import StochasticTensor
@@ -71,6 +72,15 @@ class BayesianNet(nn.Module):
         return self._cache
 
     @property
+    def device(self):
+        """
+        The device this module lies at.
+        
+        :return: torch.device
+        """     
+        return next(self.parameters()).device
+
+    @property
     def observed(self):
         """
         The dictionary of all observed nodes in this :class:`BayesianNet`.
@@ -106,7 +116,7 @@ class BayesianNet(nn.Module):
         :param **kwargs: Parameters of the distribution which the node builds with.
         :return: A instance(sample) of the node.
         """
-        _dist = globals()[distribution](**kwargs) #TODO: `globals()` is unsafe
+        _dist = globals()[distribution](device=self.device, **kwargs) #TODO: `globals()` is unsafe
         self._nodes[name] = StochasticTensor(self, name, _dist, **kwargs)
         return self._nodes[name].tensor
 

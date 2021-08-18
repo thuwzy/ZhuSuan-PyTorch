@@ -28,12 +28,14 @@ class Bernoulli(Distribution):
                  is_continues=False,
                  is_reparameterized=True,
                  group_ndims=0,
+                 device=torch.device('cpu'),
                  **kwargs):
         super(Bernoulli, self).__init__(dtype,
                                         param_dtype,
                                         is_continues,
                                         is_reparameterized,
                                         group_ndims=group_ndims,
+                                        device=device,
                                         **kwargs)
         self._probs = kwargs['probs']
         self._probs = torch.as_tensor(self._probs, dtype=self._dtype)

@@ -76,6 +76,7 @@ class Distribution(object):
                  is_reparameterized,
                  use_path_derivative=False,
                  group_ndims=0,
+                 device=torch.device('cpu'),
                  **kwargs):
 
         self._dtype = dtype
@@ -83,6 +84,7 @@ class Distribution(object):
         self._is_continuous = is_continuous
         self._is_reparameterized = is_reparameterized
         self._use_path_derivative = use_path_derivative
+        self._device = device
     
         if isinstance(group_ndims, int):
             if group_ndims < 0:
@@ -96,6 +98,15 @@ class Distribution(object):
     # def dtype(self):
     #     """The sample type of the distribution."""
     #     return self._dtype
+
+    @property
+    def device(self):
+        """
+        The device this distribution lies at.
+        
+        :return: torch.device
+        """     
+        return self._device
 
     @property
     def is_reparameterized(self):

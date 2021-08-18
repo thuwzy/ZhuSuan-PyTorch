@@ -94,6 +94,7 @@ class Variational(BayesianNet):
 
 
 def main():
+    device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     epoch_size = 10
     batch_size = 64
 
@@ -106,18 +107,21 @@ def main():
 
     generator = Generator(x_dim, z_dim, lb_samples)
     variational = Variational(x_dim, z_dim, lb_samples)
-    model = ImportanceWeightedObjective(generator, variational, axis=0)
+    model = ImportanceWeightedObjective(generator, variational, axis=0).to(device)
 
     optimizer = torch.optim.Adam(model.parameters(), lr)
 
     x_train, t_train, x_valid, t_valid, x_test, t_test = load_mnist_realval()
+
+    x_train = torch.as_tensor(x_train).to(device)
+    x_test = torch.as_tensor(x_test).to(device)
 
     len_ = x_train.shape[0]
     num_batches = math.ceil(len_ / batch_size)
 
     for epoch in range(epoch_size):
         for step in range(num_batches):
-            x = torch.as_tensor(x_train[step * batch_size:min((step + 1) * batch_size, len_)])
+            x = x_train[step * batch_size:min((step + 1) * batch_size, len_)]
             x = torch.reshape(x, [-1, x_dim])
             if x.shape[0] != batch_size:
                 break
@@ -126,7 +130,7 @@ def main():
             loss.backward()
             optimizer.step()
             if (step + 1) % 100 == 0:
-                print("Epoch[{}/{}], Step [{}/{}], Loss: {:.4f}".format(epoch + 1, epoch_size, step + 1, num_batches,loss))
+                print("Epoch[{}/{}], Step [{}/{}], Loss: {:.4f}".format(epoch + 1, epoch_size, step + 1, num_batches,loss.clone().cpu().detach().numpy()))
                                                                         #float(loss.clone().detach().numpy())))
 
     batch_x = x_test[0:64]
@@ -134,14 +138,16 @@ def main():
     nodes_q = variational({'x': batch_x}).nodes
     z = nodes_q['z'].tensor
     cache = generator({'z': z}).cache
-    sample = cache['x_mean'][0].detach().numpy()
+    sample = cache['x_mean'][0].cpu().detach().numpy()
 
     cache = generator({}).cache
-    sample_gen = cache['x_mean'][0].detach().numpy()
+    sample_gen = cache['x_mean'][0].cpu().detach().numpy()
 
     result_fold = './result'
     if not os.path.exists(result_fold):
         os.mkdir(result_fold)
+
+    batch_x = batch_x.cpu().detach().numpy()
 
     save_img(batch_x, os.path.join(result_fold, 'iw_origin_x_.png'))
     save_img(sample, os.path.join(result_fold, 'iw_reconstruct_x_.png'))
