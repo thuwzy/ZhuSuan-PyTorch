@@ -37,7 +37,7 @@ class Net(BayesianNet):
                         reduce_mean_dims=[0])
             w = torch.unsqueeze(w, 1)
             w = w.repeat([1, batch_size, 1, 1])
-            h = torch.cat((h, torch.ones([*h.shape[:-1], 1])), -1)
+            h = torch.cat((h, torch.ones([*h.shape[:-1], 1]).to(self.device)), -1)
             h = torch.unsqueeze(h, -1)
             p = torch.sqrt(torch.as_tensor(h.shape[2], dtype=torch.float32))
             h = torch.matmul(w, h) / p
@@ -73,11 +73,9 @@ class Variational(BayesianNet):
         for i, (n_in, n_out) in enumerate(zip(self.layer_sizes[:-1], self.layer_sizes[1:])):
             w_mean = torch.nn.init.constant_(torch.empty([n_out, n_in + 1], dtype = torch.float32), 0)
             _name = 'w_mean_' + str(i)
-            #w_mean = w_mean.name(_name)
             self.__dict__[_name] = w_mean
             w_logstd = torch.nn.init.constant_(torch.empty([n_out, n_in + 1], dtype = torch.float32), 0)
             _name = 'w_logstd_' + str(i)
-            #w_logstd = w_logstd.name(_name)
             self.__dict__[_name] = w_logstd
             w_mean = torch.nn.parameter.Parameter(w_mean, requires_grad=True)
             w_logstd = torch.nn.parameter.Parameter(w_logstd, requires_grad=True)
@@ -102,6 +100,8 @@ class Variational(BayesianNet):
 
 
 def main():
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
     data_path = os.path.join('data', 'housing.data')
     x_train, y_train, x_valid, y_valid, x_test, y_test = load_uci_boston_housing(data_path)
     x_train = np.vstack([x_train, x_valid])
@@ -127,6 +127,11 @@ def main():
     #     print("a",type(param), param.size())
     model = ELBO(net, variational)
 
+    model.to(device)
+    x_train = torch.as_tensor(x_train).to(device)
+    y_train = torch.as_tensor(y_train).to(device)
+    x_test = torch.as_tensor(x_test).to(device)
+    y_test = torch.as_tensor(y_test).to(device)
 
     lr = 0.001
     optimizer = torch.optim.Adam(model.parameters(), lr)
@@ -144,29 +149,29 @@ def main():
         y_train = y_train[perm]
 
         for step in range(num_batches):
-            x = torch.as_tensor(x_train[step * batch_size:(step + 1) * batch_size])
-            y = torch.as_tensor(y_train[step * batch_size:(step + 1) * batch_size])
+            x = x_train[step * batch_size:(step + 1) * batch_size]
+            y = y_train[step * batch_size:(step + 1) * batch_size]
             lbs = model({'x': x, 'y': y})
             optimizer.zero_grad()
             lbs.backward()
             optimizer.step()
 
             if (step + 1) % num_batches == 0:
-                rmse = net.cache['rmse'].clone().detach().numpy()
+                rmse = net.cache['rmse'].clone().cpu().detach().numpy()
                 print("Epoch[{}/{}], Step [{}/{}], Lower bound: {:.4f}, RMSE: {:.4f}".format(epoch + 1, epoch_size,
                                                                                              step + 1,
                                                                                              num_batches,
-                                                                                             float(lbs.clone().detach().numpy()),
+                                                                                             float(lbs.clone().cpu().detach().numpy()),
                                                                                              float(rmse) * std_y_train))
 
         # eval
         if epoch % test_freq == 0:
-            x_t = torch.as_tensor(x_test)
-            y_t = torch.as_tensor(y_test)
+            x_t = x_test
+            y_t = y_test
             lbs = model({'x': x_t, 'y': y_t})
-            rmse = net.cache['rmse'].clone().detach().numpy()
+            rmse = net.cache['rmse'].clone().cpu().detach().numpy()
             print('>> TEST')
-            print('>> Test Lower bound: {:.4f}, RMSE: {:.4f}'.format(float(lbs.clone().detach().numpy()), float(rmse) * std_y_train))
+            print('>> Test Lower bound: {:.4f}, RMSE: {:.4f}'.format(float(lbs.clone().cpu().detach().numpy()), float(rmse) * std_y_train))
 
 
 if __name__ == '__main__':
