@@ -16,7 +16,7 @@ class BayesianNet(nn.Module):
             class Net(BayesianNet):
                 def __init__(self):
                     # Initialize...
-                def execute(self, observed):
+                def forward(self, observed):
                     # Forward propagation...
         
         A :class:`BayesianNet` keeps two kinds of nodes
@@ -53,6 +53,8 @@ class BayesianNet(nn.Module):
         self._cache = {}
         self._observed = observed if observed else {}
 
+        self._device = torch.device('cpu') #! NOTICE: device default as CPU
+
     @property
     def nodes(self):
         """
@@ -77,8 +79,15 @@ class BayesianNet(nn.Module):
         The device this module lies at.
         
         :return: torch.device
-        """     
-        return next(self.parameters()).device
+        """    
+        try: 
+            return next(self.parameters()).device
+        except:
+            return self._device
+
+    def to(self, device):
+        self._device = device
+        return super().to(device)
 
     @property
     def observed(self):

@@ -27,8 +27,8 @@ class Logistic(Distribution):
                                        group_ndims=group_ndims,
                                        device=device,
                                        **kwargs)
-        self._loc = torch.as_tensor(kwargs['loc'], dtype = self._dtype) if type(kwargs['loc']) in [int, float] else kwargs['loc']
-        self._scale = torch.as_tensor(kwargs['scale'], dtype = self._dtype) if type(kwargs['scale']) in [int, float] else kwargs['scale']
+        self._loc = torch.as_tensor(kwargs['loc'], dtype = self._dtype).to(device) if type(kwargs['loc']) in [int, float] else kwargs['loc'].to(device)
+        self._scale = torch.as_tensor(kwargs['scale'], dtype = self._dtype).to(device) if type(kwargs['scale']) in [int, float] else kwargs['scale'].to(device)
     
     def _batch_shape(self):
         return self._loc.shape

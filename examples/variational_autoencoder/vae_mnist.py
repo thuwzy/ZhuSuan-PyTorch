@@ -86,7 +86,7 @@ class Variational(BayesianNet):
 
 
 def main():
-    device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     epoch_size = 10
     batch_size = 64

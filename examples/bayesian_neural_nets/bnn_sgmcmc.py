@@ -51,7 +51,7 @@ class Net(BayesianNet):
                         reduce_mean_dims=[0])
             w = torch.unsqueeze(w, 1)
             w = w.repeat([1, batch_size, 1, 1])
-            h = torch.cat([h, torch.ones([*h.shape[:-1], 1])], -1)
+            h = torch.cat([h, torch.ones([*h.shape[:-1], 1]).to(self.device)], -1)
             h = torch.unsqueeze(h, -1)
             p = torch.sqrt(torch.as_tensor(h.shape[2], dtype=torch.float32))
             h = torch.matmul(w, h) / p
@@ -76,6 +76,8 @@ class Net(BayesianNet):
 
 
 def main():
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
     data_path = os.path.join('data', 'housing.data')
     x_train, y_train, x_valid, y_valid, x_test, y_test = load_uci_boston_housing(data_path)
     x_train = np.vstack([x_train, x_valid])
@@ -96,16 +98,21 @@ def main():
     layer_sizes = [x_dim] + n_hiddens + [1]
     print('layer size: ', layer_sizes)
 
-    net = Net(layer_sizes, lb_samples)
+    net = Net(layer_sizes, lb_samples).to(device)
     print('parameters length: ', len([_ for _ in net.parameters()]))
 
     lr = 1e-3
-    model = SGLD(lr)
+    model = SGLD(lr).to(device)
 
     len_ = len(x_train)
     num_batches = math.floor(len_ / batch_size)
 
     test_freq = 20
+
+    x_train = torch.as_tensor(x_train).to(device)
+    y_train = torch.as_tensor(y_train).to(device)
+    x_test = torch.as_tensor(x_test).to(device)
+    y_test = torch.as_tensor(y_test).to(device)
 
     for epoch in range(epoch_size):
         perm = np.random.permutation(x_train.shape[0])
@@ -129,7 +136,7 @@ def main():
 
             if (step + 1) % num_batches == 0:
                 net.forward({**w_samples, 'x': x, 'y': y})
-                rmse = net.cache['rmse'].clone().detach().numpy()
+                rmse = net.cache['rmse'].clone().cpu().detach().numpy()
                 print("Epoch[{}/{}], Step [{}/{}], RMSE: {:.4f}".format(epoch + 1, epoch_size, step + 1, num_batches,
                                                                         float(rmse) * std_y_train))
 
@@ -138,7 +145,7 @@ def main():
             x_t = torch.as_tensor(x_test)
             y_t = torch.as_tensor(y_test)
             net.forward({**w_samples, 'x': x_t, 'y': y_t})
-            rmse = net.cache['rmse'].clone().detach().numpy()
+            rmse = net.cache['rmse'].clone().cpu().detach().numpy()
             print('>> TEST')
             print('>> Test RMSE: {:.4f}'.format(float(rmse) * std_y_train))
 
