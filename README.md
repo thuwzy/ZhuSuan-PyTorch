@@ -1,14 +1,14 @@
-[![Documentation Status](https://readthedocs.org/projects/zhusuan-pytorch/badge/?version=latest)](https://zhusuan-pytorch.readthedocs.io/en/latest/?badge=latest)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/thu-ml/zhusuan/blob/master/LICENSE)
-
-# Zhusuan-PyTorch
-
 <div align="center">
-  <a href="https://zhusuan-pytorch.readthedocs.io/en/latest/?badge=latest"> <img width="570px" height="auto" 
+  <a href="https://zhusuan-pytorch.readthedocs.io/en/latest/?badge=latest"> <img width="560px" height="auto" 
     src="docs/_static/images/zhusuan-logo-h.png"></a>
 </div>
 
+# Zhusuan-PyTorch
+
 ---
+
+[![Documentation Status](https://readthedocs.org/projects/zhusuan-pytorch/badge/?version=latest)](https://zhusuan-pytorch.readthedocs.io/en/latest/?badge=latest)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/thu-ml/zhusuan/blob/master/LICENSE)
 
 ZhuSuan-PyTorch is a python probabilistic programming library for
 **Bayesian deep learning**, which conjoins the complimentary advantages of
