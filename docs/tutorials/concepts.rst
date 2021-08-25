@@ -179,10 +179,10 @@ The full code of building a Bayesian linear regression model is like::
         
         def forward(self, observed):
             self.observe(observed)
-            w = self.self.stochastic_node('Normal', name="w", mean=torch.zeros([x.shape[-1]]), std=alpha)
+            w = self.stochastic_node('Normal', name="w", mean=torch.zeros([x.shape[-1]]), std=alpha)
             x = self.observed['x']
             y_mean = torch.sum(w * x, dim=-1)
-            y = self.self.stochastic_node('Normal', name="y", mean=y_mean, std=beta)
+            y = self.stochastic_node('Normal', name="y", mean=y_mean, std=beta)
             return self
 
 Then we can construct an instance of the model::

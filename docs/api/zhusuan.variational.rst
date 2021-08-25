@@ -6,6 +6,7 @@ zhusuan.variational
     :undoc-members:
     :show-inheritance:
     :inherited-members:
+    :inherited-members:
 
 Submodules
 ----------
@@ -14,3 +15,4 @@ Submodules
    :maxdepth: 4
 
    zhusuan.variational.elbo
+   zhusuan.variational.importance_weighted_objective
