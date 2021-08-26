@@ -123,8 +123,6 @@ def main():
 
     net = Net(layer_sizes, lb_samples)
     variational = Variational(layer_sizes, lb_samples)
-    # for param in variational.parameters():
-    #     print("a",type(param), param.size())
     model = ELBO(net, variational)
 
     model.to(device)
@@ -135,8 +133,6 @@ def main():
 
     lr = 0.001
     optimizer = torch.optim.Adam(model.parameters(), lr)
-
-    # print('parameters length:', len(model.parameters()))
 
     len_ = len(x_train)
     num_batches = math.floor(len_ / batch_size)

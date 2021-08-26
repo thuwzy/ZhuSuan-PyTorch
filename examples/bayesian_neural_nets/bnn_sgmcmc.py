@@ -26,13 +26,8 @@ class Net(BayesianNet):
         for i, (n_in, n_out) in enumerate(zip(self.layer_sizes[:-1], self.layer_sizes[1:])):
             w_logstd_ = torch.nn.init.constant_(torch.empty([n_out, n_in + 1], dtype=torch.float32), val = 0.0)
             _name = 'w_logstd_' + str(i)
-            #w_logstd_ = w_logstd_.name(_name)
             self.__dict__[_name] = w_logstd_
-            #w_logstd_ = torch.nn.parameter.Parameter(w_logstd_, requires_grad=True)
-            #w_logstd_.requires_grad=True
             self.w_logstds.append(w_logstd_)
-        
-        #self.w_logstds = torch.nn.ParameterList(self.w_logstds)  
 
     def forward(self, observed):
         self.observe(observed)
@@ -71,7 +66,7 @@ class Net(BayesianNet):
                 logstd=self.y_logstd,
                 reparameterize=True,
                 reduce_mean_dims=[0, 1],
-                multiplier=456)  # training data size
+                multiplier=456)
         return self
 
 
@@ -122,8 +117,6 @@ def main():
         for step in range(num_batches):
             x = torch.as_tensor(x_train[step * batch_size:(step + 1) * batch_size])
             y = torch.as_tensor(y_train[step * batch_size:(step + 1) * batch_size])
-            # x.requires_grad = True
-            # y.requires_grad = True
 
             re_sample = True if epoch == 0 and step == 0 else False
             w_samples = model.sample(net, {'x': x, 'y': y}, re_sample)
@@ -132,7 +125,6 @@ def main():
                 assert (w.shape[0] == lb_samples)
                 esti_logstd = 0.5 * torch.log(torch.mean(w * w, [0]))
                 net.w_logstds[i] = esti_logstd.detach()
-                # net.w_logstds[i].requires_grad = True
 
             if (step + 1) % num_batches == 0:
                 net.forward({**w_samples, 'x': x, 'y': y})
