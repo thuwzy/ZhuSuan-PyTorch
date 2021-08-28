@@ -175,7 +175,7 @@ def test_2parameter_log_prob_shape_same(
         dist = Distribution(param1, param2)
         given = torch.tensor(make_given(given_shape), dtype=torch.float32)
         log_p = dist.log_prob(given)
-        test_class.assertEqual( log_p.shape, target_shape)
+        test_class.assertEqual( log_p.shape, torch.Size(target_shape))
 
     _test_dynamic([2, 3], [2, 1], [1, 3], [2, 3])
     _test_dynamic([1, 3], [1, 1], [2, 1, 3], [2, 1, 3])
@@ -211,10 +211,10 @@ def test_2parameter_sample_shape_same(
         param2 = torch.tensor(make_param2(param2_shape), dtype=torch.float32)
         dist = Distribution(param1, param2)
         samples = dist.sample(n_samples)
-        test_class.assertEqual(samples.shape, target_shape)
+        test_class.assertEqual(samples.shape, torch.Size(target_shape))
 
     # TODO: Sample_shape will be [n_samples, batch_shape]
-    _test_dynamic([2, 3], [2, 1], 1, [ 2, 3])
+    _test_dynamic([2, 3], [2, 1], 1, [2, 3])
     _test_dynamic([1, 3], [2, 1], 2, [2, 2, 3])
     _test_dynamic([2, 1, 5], [1, 3, 1], 3, [3, 2, 3, 5])
     # try:
