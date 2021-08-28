@@ -75,43 +75,6 @@ class TestNormal(unittest.TestCase):
         self.assertEqual(mean_grads, None)
         self.assertEqual(logstd_grads, None)
 
-    def test_path_derivative(self):
-        mean = torch.ones([2, 3])
-        logstd = torch.ones([2, 3])
-        mean.requires_grad = False
-        logstd.requires_grad = False
-        n_samples = 7
-
-        norm_rep = Normal(mean=mean, logstd=logstd, use_path_derivative=True)
-        samples = norm_rep.sample(n_samples)
-        log_prob = norm_rep.log_prob(samples)
-        mean_path_grads, logstd_path_grads = torch.autograd.grad(outputs=[log_prob],
-                                                         inputs=[mean, logstd],
-                                                         allow_unused=True, retain_graph=True)
-        sample_grads = torch.autograd.grad(outputs=[log_prob],inputs=[samples],
-                                   allow_unused=True, retain_graph=True)
-        mean_true_grads =  torch.autograd.grad(outputs=[samples],inputs=[mean],
-                                       grad_outputs=sample_grads,
-                                       allow_unused=True, retain_graph=True)[0]
-        logstd_true_grads = torch.autograd.grad(outputs=[samples],inputs=[logstd],
-                                       grad_outputs=sample_grads,
-                                       allow_unused=True, retain_graph=True)[0]
-        # TODO: Figure out why path gradients unmatched with true gradients
-        # np.testing.assert_allclose(mean_path_grads.numpy(), mean_true_grads.numpy() )
-        # np.testing.assert_allclose(logstd_path_grads.numpy(), logstd_true_grads.numpy())
-
-        norm_no_rep = Normal(mean=mean, logstd=logstd, is_reparameterized=False,
-                             use_path_derivative=True)
-
-        samples = norm_no_rep.sample(n_samples)
-        log_prob = norm_no_rep.log_prob(samples)
-
-        mean_path_grads, logstd_path_grads = torch.autograd.grad(outputs=[log_prob],
-                                                         inputs=[mean, logstd],
-                                                         allow_unused=True)
-        self.assertTrue(mean_path_grads is None)
-        self.assertTrue(mean_path_grads is None)
-
     def test_log_prob_shape(self):
         utils.test_2parameter_log_prob_shape_same(
             self, self._Normal_std, np.zeros, np.ones, np.zeros)
