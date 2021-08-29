@@ -29,7 +29,7 @@ def test_and_save_distribution_img( distribution,
     if not os.path.isdir(hist_folder):
         os.mkdir(hist_folder)
 
-    samples = distribution.sample(10000).numpy().flatten()
+    samples = distribution.sample(100000).numpy().flatten()
 
     dist_name = distribution.__class__.__name__
     img_path = os.path.join(hist_folder, dist_name+'.png')
