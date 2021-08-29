@@ -39,4 +39,39 @@ class Beta(Distribution):
     @property
     def beta(self):
         """One of the two shape parameters of the Beta distribution."""
-        return self._beta   
+        return self._beta
+
+    def _sample(self, n_samples=1):
+        if n_samples > 1:
+            _shape = self._alpha.shape
+            _shape = torch.Size([n_samples]) + _shape
+            _len = len(self._alpha.shape)
+            _alpha = self._alpha.repeat([n_samples, *_len * [1]])
+            _beta = self._beta.repeat([n_samples, *_len * [1]])
+        else:
+            _shape = self._alpha.shape
+            _alpha = torch.as_tensor(self._alpha, dtype=self._dtype)
+            _beta = torch.as_tensor(self._beta, dtype=self._dtype)
+
+        if not self.is_reparameterized:
+            _alpha.requires_grad = False
+            _beta.requires_grad = False
+        
+        raise NotImplementedError()
+
+    def _log_prob(self, sample=None):
+        if sample is None:
+            sample = self.sample_cache
+        if len(sample.shape) > len(self._alpha.shape):
+            n_samples = sample.shape[0]
+            _len = len(self._alpha.shape)
+            _alpha = self._alpha.repeat([n_samples, *_len * [1]])
+            _beta = self._beta.repeat([n_samples, *_len * [1]])
+        else:
+            _alpha = self._alpha
+            _beta = self._beta
+        if not self.is_reparameterized:
+            _alpha.requires_grad = False
+            _beta.requires_grad = False
+
+        raise NotImplementedError()
