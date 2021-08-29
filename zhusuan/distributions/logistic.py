@@ -38,12 +38,12 @@ class Logistic(Distribution):
             _shape = self._loc.shape
             _shape = torch.Size([n_samples]) + _shape
             _len = len(self._loc.shape)
-            _loc = torch.as_tensor(self._loc.repeat([n_samples, *_len * [1]]), dtype = self._dtype)
-            _scale = torch.as_tensor(self._scale.repeat([n_samples, *_len * [1]]), dtype = self._dtype)
+            _loc = self._loc.repeat([n_samples, *_len * [1]])
+            _scale = self._scale.repeat([n_samples, *_len * [1]])
         else:
             _shape = self._loc.shape
-            _loc = torch.as_tensor(self._loc, dtype = self._dtype)
-            _scale = torch.as_tensor(self._scale, dtype = self._dtype)
+            _loc = self._loc
+            _scale = self._scale
         
         if not self.is_reparameterized:
             _loc.requires_grad = False

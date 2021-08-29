@@ -67,8 +67,8 @@ class Normal(Distribution):
             _std = self._std.repeat([n_samples, *_len * [1]])
         else:
             _shape = self._mean.shape
-            _mean = torch.as_tensor(self._mean, dtype=self._dtype)
-            _std = torch.as_tensor(self._std, dtype=self._dtype)
+            _mean = self._mean
+            _std = self._std
 
         if not self.is_reparameterized:
             _mean.requires_grad = False
