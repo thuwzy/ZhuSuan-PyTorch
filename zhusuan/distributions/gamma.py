@@ -3,13 +3,13 @@ import numpy as np
 
 from zhusuan.distributions import Distribution
 
-class Beta(Distribution):
+class Gamma(Distribution):
     """
-    The class of univariate Beta distribution
+    The class of univariate Gamma distribution
     See :class:`~zhusuan.distributions.base.Distribution` for details.
 
-    :param alpha: A 'float' Var. One of the two shape parameters of the Beta distribution.
-    :param beta: A 'float' Var. One of the two shape parameters of the Beta distribution.
+    :param alpha: A 'float' Var. Shape parameter of the Gamma distribution.
+    :param beta: A 'float' Var. Rate parameter of the Gamma distribution.
     """
     def __init__(self,
                 dtype=torch.float32,
@@ -18,10 +18,10 @@ class Beta(Distribution):
                 group_ndims=0,
                 device=torch.device('cpu'),
                 **kwargs):
-        super(Beta, self).__init__(dtype,
+        super(Gamma, self).__init__(dtype,
                                        param_dtype,
                                        is_continues,
-                                       is_reparameterized=False, # reparameterization trick is not applied for Beta distribution
+                                       is_reparameterized=False, # reparameterization trick is not applied for Gamma distribution
                                        group_ndims=group_ndims,
                                        device=device,
                                        **kwargs)
@@ -31,12 +31,12 @@ class Beta(Distribution):
 
     @property
     def alpha(self):
-        """One of the two shape parameters of the Beta distribution."""
+        """Shape parameter of the Gamma distribution."""
         return self._alpha
 
     @property
     def beta(self):
-        """One of the two shape parameters of the Beta distribution."""
+        """Rate parameter of the Gamma distribution."""
         return self._beta
 
     def _sample(self, n_samples=1):
@@ -51,7 +51,7 @@ class Beta(Distribution):
             _alpha = torch.as_tensor(self._alpha, dtype=self._dtype)
             _beta = torch.as_tensor(self._beta, dtype=self._dtype)
 
-        _sample = torch.distributions.beta.Beta(_alpha, _beta).sample()
+        _sample = torch.distributions.gamma.Gamma(_alpha, _beta).sample()
 
         return _sample
 
@@ -67,4 +67,4 @@ class Beta(Distribution):
             _alpha = self._alpha
             _beta = self._beta
 
-        return torch.distributions.beta.Beta(_alpha, _beta).log_prob(sample)
+        return torch.distributions.gamma.Gamma(_alpha, _beta).log_prob(sample)
