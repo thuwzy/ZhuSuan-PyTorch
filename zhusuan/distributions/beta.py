@@ -10,20 +10,18 @@ class Beta(Distribution):
 
     :param alpha: A 'float' Var. One of the two shape parameters of the Beta distribution.
     :param beta: A 'float' Var. One of the two shape parameters of the Beta distribution.
-    :param is_reparameterized: A Bool. If True, gradients on samples from this distribution are allowed to propagate into inputs, using the reparametrization trick from (Kingma, 2013).
     """
     def __init__(self,
                 dtype=torch.float32,
                 param_dtype=torch.float32,
                 is_continues=True,
-                is_reparameterized=True,
                 group_ndims=0,
                 device=torch.device('cpu'),
                 **kwargs):
         super(Beta, self).__init__(dtype,
                                        param_dtype,
                                        is_continues,
-                                       is_reparameterized,
+                                       is_reparameterized=False,
                                        group_ndims=group_ndims,
                                        device=device,
                                        **kwargs)
@@ -53,11 +51,9 @@ class Beta(Distribution):
             _alpha = torch.as_tensor(self._alpha, dtype=self._dtype)
             _beta = torch.as_tensor(self._beta, dtype=self._dtype)
 
-        if not self.is_reparameterized:
-            _alpha.requires_grad = False
-            _beta.requires_grad = False
-        
-        raise NotImplementedError()
+        _sample = torch.distributions.beta.Beta(_alpha, _beta).sample()
+
+        return _sample
 
     def _log_prob(self, sample=None):
         if sample is None:
@@ -70,8 +66,5 @@ class Beta(Distribution):
         else:
             _alpha = self._alpha
             _beta = self._beta
-        if not self.is_reparameterized:
-            _alpha.requires_grad = False
-            _beta.requires_grad = False
 
-        raise NotImplementedError()
+        return torch.distributions.beta.Beta(_alpha, _beta).log_prob(sample)
