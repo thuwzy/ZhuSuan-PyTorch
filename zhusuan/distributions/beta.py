@@ -1,6 +1,4 @@
 import torch
-import numpy as np
-
 from zhusuan.distributions import Distribution
 
 class Beta(Distribution):

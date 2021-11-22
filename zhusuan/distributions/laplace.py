@@ -1,37 +1,43 @@
 import torch
 from zhusuan.distributions import Distribution
 
-class Logistic(Distribution):
+class Laplace(Distribution):
     """
-    The class of univariate Logistic distribution
+    The class of univariate Laplace distribution
     See :class:`~zhusuan.distributions.base.Distribution` for details.
 
-    :param loc: A 'float' Var. The location term acting on standard Logistic distribution.
-    :param scale: A 'float' Var. The scale term acting on standard Logistic distribution.
-    :param is_reparameterized: A Bool. If True, gradients on samples from this distribution are allowed to propagate into inputs, using the reparametrization trick from (Kingma, 2013).
+    :param loc: A 'float' Var. Mean of the Laplace distribution.
+    :param scale: A 'float' Var. Scale of the Laplace distribution.
     """
     def __init__(self,
                 dtype=torch.float32,
                 param_dtype=torch.float32,
                 is_continues=True,
-                is_reparameterized=True,
                 group_ndims=0,
                 device=torch.device('cpu'),
                 **kwargs):
-        super(Logistic, self).__init__(dtype,
+        super(Laplace, self).__init__(dtype,
                                        param_dtype,
                                        is_continues,
-                                       is_reparameterized,
+                                       is_reparameterized=False, # reparameterization trick is not applied for Laplace distribution
                                        group_ndims=group_ndims,
                                        device=device,
                                        **kwargs)
+
         self._loc = torch.as_tensor(kwargs['loc'], dtype = self._dtype).to(device) if type(kwargs['loc']) in [int, float] else kwargs['loc'].to(device)
         self._scale = torch.as_tensor(kwargs['scale'], dtype = self._dtype).to(device) if type(kwargs['scale']) in [int, float] else kwargs['scale'].to(device)
-    
-    def _batch_shape(self):
-        return self._loc.shape
-    
-    def _sample(self, n_samples=1, **kwargs):
+
+    @property
+    def loc(self):
+        """Mean of the Laplace distribution."""
+        return self._loc
+
+    @property
+    def scale(self):
+        """Scale of the Laplace distribution."""
+        return self._scale
+
+    def _sample(self, n_samples=1):
         if n_samples > 1:
             _shape = self._loc.shape
             _shape = torch.Size([n_samples]) + _shape
@@ -40,20 +46,14 @@ class Logistic(Distribution):
             _scale = self._scale.repeat([n_samples, *_len * [1]])
         else:
             _shape = self._loc.shape
-            _loc = self._loc
-            _scale = self._scale
-        
-        if not self.is_reparameterized:
-            _loc.requires_grad = False
-            _scale.requires_grad = False
-        
-        uniform = torch.nn.init.uniform_(torch.empty(_shape, dtype = self._dtype), 0., 1.) #!check efficiency
-        epsilon = torch.log(uniform) - torch.log(1 - uniform)
-        _sample = _loc + _scale * epsilon
-        self.sample_cache = _sample
+            _loc = torch.as_tensor(self._loc, dtype=self._dtype)
+            _scale = torch.as_tensor(self._scale, dtype=self._dtype)
+
+        _sample = torch.distributions.laplace.Laplace(_loc, _scale).sample()
+
         return _sample
-    
-    def _log_prob(self, sample=None, **kwargs):
+
+    def _log_prob(self, sample=None):
         if sample is None:
             sample = self.sample_cache
         if len(sample.shape) > len(self._loc.shape):
@@ -64,11 +64,5 @@ class Logistic(Distribution):
         else:
             _loc = self._loc
             _scale = self._scale
-        if not self.is_reparameterized:
-            _loc.requires_grad = False
-            _scale.requires_grad = False
-        z = (sample - _loc) / _scale
-        return -z - 2. * torch.nn.Softplus()(-z) - torch.log(_scale)
 
-
-        
+        return torch.distributions.laplace.Laplace(_loc, _scale).log_prob(sample)
