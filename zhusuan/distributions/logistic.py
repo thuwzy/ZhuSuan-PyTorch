@@ -64,9 +64,7 @@ class Logistic(Distribution):
         else:
             _loc = self._loc
             _scale = self._scale
-        if not self.is_reparameterized:
-            _loc.requires_grad = False
-            _scale.requires_grad = False
+
         z = (sample - _loc) / _scale
         return -z - 2. * torch.nn.Softplus()(-z) - torch.log(_scale)
 

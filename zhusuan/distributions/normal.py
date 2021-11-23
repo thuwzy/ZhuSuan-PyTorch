@@ -89,9 +89,7 @@ class Normal(Distribution):
         else:
             _mean = self._mean
             _std = self._std
-        if not self.is_reparameterized:
-            _mean.requires_grad = False
-            _std.requires_grad = False
+            
         logstd = torch.log(_std).to(self.device)
         c = torch.tensor(-0.5 * np.log(2 * np.pi)).to(self.device)
         precision = torch.exp(-2 * logstd)
