@@ -12,7 +12,7 @@ from scipy.special import logsumexp
 
 import unittest
 
-import utils
+from test.distributions import utils
 from zhusuan.distributions.normal import *
 
 

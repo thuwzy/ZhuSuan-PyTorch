@@ -45,15 +45,13 @@ class Distribution(object):
     can be set by user. For continuous, automatically determined from parameter
     types.
 
-    The value type of `prob` and `log_prob` will be `param_dtype` which is
-    deduced from the parameter(s) when initializating. And `dtype` must be
-    among `int16`, `int32`, `int64`, `float16`, `float32` and `float64`.
+    `dtype` must be among `torch.int16`, `torch.int32`, `torch.int64`,
+    `torch.float16`, `torch.float32` and `torch.float64`.
 
     When two or more parameters are tensors and they have different type,
     `TypeError` will be raised.
 
     :param dtype: The value type of samples from the distribution.
-    :param param_dtype: The parameter(s) type of the distribution.
     :param is_continuous: Whether the distribution is continuous.
     :param is_reparameterized: A bool. Whether the gradients of samples can
         and are allowed to propagate back into inputs, using the
@@ -71,7 +69,6 @@ class Distribution(object):
     """    
     def __init__(self,
                  dtype,
-                 param_dtype,
                  is_continuous,
                  is_reparameterized,
                  use_path_derivative=False,
@@ -80,7 +77,6 @@ class Distribution(object):
                  **kwargs):
 
         self._dtype = dtype
-        self._param_dtype = param_dtype
         self._is_continuous = is_continuous
         self._is_reparameterized = is_reparameterized
         self._use_path_derivative = use_path_derivative

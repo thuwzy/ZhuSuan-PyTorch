@@ -11,18 +11,16 @@ class Gamma(Distribution):
     """
     def __init__(self,
                 dtype=torch.float32,
-                param_dtype=torch.float32,
                 is_continues=True,
                 group_ndims=0,
                 device=torch.device('cpu'),
                 **kwargs):
         super(Gamma, self).__init__(dtype,
-                                       param_dtype,
-                                       is_continues,
-                                       is_reparameterized=False, # reparameterization trick is not applied for Gamma distribution
-                                       group_ndims=group_ndims,
-                                       device=device,
-                                       **kwargs)
+                                    is_continues,
+                                    is_reparameterized=False, # reparameterization trick is not applied for Gamma distribution
+                                    group_ndims=group_ndims,
+                                    device=device,
+                                    **kwargs)
 
         self._alpha = torch.as_tensor(kwargs['alpha'], dtype = self._dtype).to(device) if type(kwargs['alpha']) in [int, float] else kwargs['alpha'].to(device)
         self._beta = torch.as_tensor(kwargs['beta'], dtype = self._dtype).to(device) if type(kwargs['beta']) in [int, float] else kwargs['beta'].to(device)

@@ -10,13 +10,11 @@ class Possion(Distribution):
     """
     def __init__(self,
                 dtype=torch.float32,
-                param_dtype=torch.float32,
                 is_continues=True,
                 group_ndims=0,
                 device=torch.device('cpu'),
                 **kwargs):
         super(Possion, self).__init__(dtype,
-                                       param_dtype,
                                        is_continues,
                                        is_reparameterized=False, # reparameterization trick is not applied for Possion distribution
                                        group_ndims=group_ndims,

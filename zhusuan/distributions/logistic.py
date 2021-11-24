@@ -12,14 +12,12 @@ class Logistic(Distribution):
     """
     def __init__(self,
                 dtype=torch.float32,
-                param_dtype=torch.float32,
                 is_continues=True,
                 is_reparameterized=True,
                 group_ndims=0,
                 device=torch.device('cpu'),
                 **kwargs):
         super(Logistic, self).__init__(dtype,
-                                       param_dtype,
                                        is_continues,
                                        is_reparameterized,
                                        group_ndims=group_ndims,

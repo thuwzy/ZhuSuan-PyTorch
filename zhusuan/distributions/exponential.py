@@ -10,18 +10,16 @@ class Exponential(Distribution):
     """
     def __init__(self,
                 dtype=torch.float32,
-                param_dtype=torch.float32,
                 is_continues=True,
                 group_ndims=0,
                 device=torch.device('cpu'),
                 **kwargs):
         super(Exponential, self).__init__(dtype,
-                                       param_dtype,
-                                       is_continues,
-                                       is_reparameterized=False, # reparameterization trick is not applied for Exponential distribution
-                                       group_ndims=group_ndims,
-                                       device=device,
-                                       **kwargs)
+                                        is_continues,
+                                        is_reparameterized=False, # reparameterization trick is not applied for Exponential distribution
+                                        group_ndims=group_ndims,
+                                        device=device,
+                                        **kwargs)
 
         self._rate = torch.as_tensor(kwargs['rate'], dtype = self._dtype).to(device) if type(kwargs['rate']) in [int, float] else kwargs['rate'].to(device)
 

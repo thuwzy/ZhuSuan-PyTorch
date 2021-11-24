@@ -31,14 +31,12 @@ class Normal(Distribution):
     """
     def __init__(self,
                  dtype=torch.float32,
-                 param_dtype=torch.float32,
                  is_continues = True,
                  is_reparameterized=True,
                  group_ndims=0,
                  device=torch.device('cpu'),
                  **kwargs):
         super(Normal, self).__init__(dtype,
-                                     param_dtype,
                                      is_continues,
                                      is_reparameterized,
                                      group_ndims=group_ndims,
@@ -89,7 +87,7 @@ class Normal(Distribution):
         else:
             _mean = self._mean
             _std = self._std
-            
+
         logstd = torch.log(_std).to(self.device)
         c = torch.tensor(-0.5 * np.log(2 * np.pi)).to(self.device)
         precision = torch.exp(-2 * logstd)
