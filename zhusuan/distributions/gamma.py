@@ -48,7 +48,7 @@ class Gamma(Distribution):
             _beta = torch.as_tensor(self._beta, dtype=self._dtype)
 
         _sample = torch.distributions.gamma.Gamma(_alpha, _beta).sample()
-
+        self.sample_cache = _sample
         return _sample
 
     def _log_prob(self, sample=None):

@@ -48,7 +48,7 @@ class Laplace(Distribution):
             _scale = torch.as_tensor(self._scale, dtype=self._dtype)
 
         _sample = torch.distributions.laplace.Laplace(_loc, _scale).sample()
-
+        self.sample_cache = _sample
         return _sample
 
     def _log_prob(self, sample=None):

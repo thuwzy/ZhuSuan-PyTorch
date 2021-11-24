@@ -39,7 +39,7 @@ class Exponential(Distribution):
             _rate = torch.as_tensor(self._rate, dtype=self._dtype)
 
         _sample = torch.distributions.exponential.Exponential(_rate).sample()
-
+        self.sample_cache = _sample
         return _sample
 
     def _log_prob(self, sample=None):

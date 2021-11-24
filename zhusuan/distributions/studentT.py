@@ -57,7 +57,7 @@ class StudentT(Distribution):
             _df = torch.as_tensor(self._df, dtype=self._dtype)
 
         _sample = torch.distributions.studentT.StudentT(_df, _loc, _scale).sample()
-
+        self.sample_cache = _sample
         return _sample
 
     def _log_prob(self, sample=None):

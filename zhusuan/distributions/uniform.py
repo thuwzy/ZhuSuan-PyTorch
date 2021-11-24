@@ -49,11 +49,10 @@ class Uniform(Distribution):
             _high = torch.as_tensor(self._high, dtype=self._dtype)
 
         if not self.is_reparameterized:
-            _low.requires_grad = False
-            _high.requires_grad = False        
-
-        _sample = torch.distributions.uniform.Uniform(torch.zeros(_shape, dtype=self._dtype), torch.ones(_shape, dtype=self._dtype)).sample()
-
+            _sample = torch.distributions.uniform.Uniform(_low, _high).sample()  
+        else:
+            _sample = torch.distributions.uniform.Uniform(torch.zeros(_shape, dtype=self._dtype), torch.ones(_shape, dtype=self._dtype)).sample()
+        self.sample_cache = _sample
         return _sample*(_high-_low)+_low
 
     def _log_prob(self, sample=None):

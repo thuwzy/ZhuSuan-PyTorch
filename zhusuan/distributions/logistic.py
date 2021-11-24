@@ -3,23 +3,21 @@ from zhusuan.distributions import Distribution
 
 class Logistic(Distribution):
     """
-    The class of univariate Logistic distribution
+    The class of univariate Logistic distribution, using the reparametrization trick from (Kingma, 2013).
     See :class:`~zhusuan.distributions.base.Distribution` for details.
 
     :param loc: A 'float' Var. The location term acting on standard Logistic distribution.
     :param scale: A 'float' Var. The scale term acting on standard Logistic distribution.
-    :param is_reparameterized: A Bool. If True, gradients on samples from this distribution are allowed to propagate into inputs, using the reparametrization trick from (Kingma, 2013).
     """
     def __init__(self,
                 dtype=torch.float32,
                 is_continues=True,
-                is_reparameterized=True,
                 group_ndims=0,
                 device=torch.device('cpu'),
                 **kwargs):
         super(Logistic, self).__init__(dtype,
                                        is_continues,
-                                       is_reparameterized,
+                                       is_reparameterized = True, 
                                        group_ndims=group_ndims,
                                        device=device,
                                        **kwargs)
@@ -40,11 +38,7 @@ class Logistic(Distribution):
             _shape = self._loc.shape
             _loc = self._loc
             _scale = self._scale
-        
-        if not self.is_reparameterized:
-            _loc.requires_grad = False
-            _scale.requires_grad = False
-        
+
         uniform = torch.nn.init.uniform_(torch.empty(_shape, dtype = self._dtype), 0., 1.) #!check efficiency
         epsilon = torch.log(uniform) - torch.log(1 - uniform)
         _sample = _loc + _scale * epsilon

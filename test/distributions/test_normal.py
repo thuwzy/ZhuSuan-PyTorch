@@ -57,11 +57,11 @@ class TestNormal(unittest.TestCase):
     def test_sample_reparameterized(self):
         mean = torch.ones([2, 3])
         logstd = torch.ones([2, 3])
-        mean.requires_grad = False
-        logstd.requires_grad = False
+        mean.requires_grad = True
+        logstd.requires_grad = True
         norm_rep = Normal(mean=mean, logstd=logstd)
         samples = norm_rep.sample()
-        mean_grads, logstd_grads = torch.autograd.grad(outputs=[samples], inputs=[mean, logstd],
+        mean_grads, logstd_grads = torch.autograd.grad(outputs=samples.sum(), inputs=[mean, logstd],
                                                allow_unused=True)
         self.assertTrue(mean_grads is not None)
         self.assertTrue(logstd_grads is not None)

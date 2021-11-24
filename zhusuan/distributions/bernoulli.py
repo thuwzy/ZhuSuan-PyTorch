@@ -54,7 +54,6 @@ class Bernoulli(Distribution):
 
         #_probs *= torch.tensor(_probs <= 1, dtype=self._dtype) #! Values larger than 1 are set to 0
         _sample = torch.bernoulli(_probs)
-
         self.sample_cache = _sample
         return _sample
 
