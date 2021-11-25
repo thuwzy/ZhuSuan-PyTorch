@@ -77,7 +77,7 @@ class TestSGMCMC(unittest.TestCase):
         sampler = mcmc.SGLD(learning_rate=0.01)
         e = sample_error_with(sampler, n_chains=100, n_iters=8000, sampler_type='sgld')
         print("the result is :", e)
-        assert(e==0)
+        assert(e < 0.023)
 
     # def test_psgld(self):
     #     sampler = mcmc.PSGLD(learning_rate=0.01)
