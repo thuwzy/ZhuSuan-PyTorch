@@ -117,7 +117,7 @@ class StochasticTensor(object):
         """
         Return the static shape of this :class:`StochasticTensor`.
 
-        :return: A ``jittor_core.NanoVector`` instance.
+        :return: A ``torch.Size`` instance.
         """
         return self.tensor.shape
 

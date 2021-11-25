@@ -68,12 +68,12 @@ class TestNormal(unittest.TestCase):
 
         norm_no_rep = Normal(mean=mean, logstd=logstd, is_reparameterized=False)
         samples = norm_no_rep.sample()
-        mean_grads, logstd_grads = torch.autograd.grad(outputs=[samples],
+        mean_grads, logstd_grads = torch.autograd.grad(outputs=samples.sum(),
                                                inputs=[mean, logstd],
                                                allow_unused=True)
 
-        self.assertEqual(mean_grads, None)
-        self.assertEqual(logstd_grads, None)
+        self.assertEqual(mean_grads.sum(), torch.zeros([1]))
+        self.assertEqual(logstd_grads.sum(), torch.zeros([1]))
 
     def test_log_prob_shape(self):
         utils.test_2parameter_log_prob_shape_same(
