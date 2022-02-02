@@ -116,6 +116,12 @@ class BayesianNet(nn.Module):
         """
         return self.stochastic_node(*args, **kwargs)
 
+    def snode(self, *args, **kwargs):
+        """
+        Short cut for method :meth:`~zhusuan.framework.bn.BayesianNet.stochastic_node`
+        """
+        return self.stochastic_node(*args, **kwargs)
+
     def stochastic_node(self, distribution, name, **kwargs):
         """
         Add a stochastic node in this :class:`BayesianNet` that follows the distribution assigned by the `name` parameter.
