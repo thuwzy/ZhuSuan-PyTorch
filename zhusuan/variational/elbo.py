@@ -30,12 +30,14 @@ class ELBO(nn.Module):
         return log_joint_
 
     def forward(self, observed, reduce_mean=True):
-        nodes_q = self.variational(observed).nodes
+        self.variational(observed)
+        nodes_q = self.variational.nodes
 
         _v_inputs = {k: v.tensor for k, v in nodes_q.items()}
         _observed = {**_v_inputs, **observed}
 
-        nodes_p = self.generator(_observed).nodes
+        self.generator(_observed)
+        nodes_p = self.generator.nodes
 
         logpxz = self.log_joint(nodes_p)
         logqz = self.log_joint(nodes_q)
