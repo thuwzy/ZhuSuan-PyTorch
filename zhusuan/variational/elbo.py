@@ -70,7 +70,8 @@ class ELBO(nn.Module):
     def reinforce(self, logpxz, logqz, reduce_mean=True, baseline=None, variance_reduction=True, decay=0.8):
         decay_tensor = torch.ones(size=[1], dtype=torch.float32) * decay
         l_signal = logpxz - logqz
-        l_signal.require_grads = False # check here
+        l_signal = l_signal.detach()
+        l_signal.require_grads = False
         baseline_cost = None
         if variance_reduction:
             if baseline is not None:
@@ -92,7 +93,7 @@ class ELBO(nn.Module):
             self.moving_mean /= bias_factor
             l_signal -= self.moving_mean.detach()
         l_signal = l_signal.detach()
-        l_signal.require_grads = False # check here
+        l_signal.require_grads = False
         cost = -logpxz - l_signal * logqz
         if baseline_cost is not None:
             if len(logqz.shape) > 0 and reduce_mean:
