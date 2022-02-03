@@ -114,8 +114,32 @@ class TestEvidenceLowerBound(unittest.TestCase):
 
 
     def test_reinforce(self):
-        pass
-        # TODO
+        eps_samples = torch.tensor(self._n01_1e6)
+        mu = torch.tensor(2., requires_grad=True)
+        sigma = torch.tensor(3., requires_grad=True)
+        qx_samples = eps_samples * sigma + mu
+        qx_samples = qx_samples.detach()
+        qx_samples.requires_grad = False
+        norm = Normal(mean=mu, std=sigma)
+        log_qx = norm.log_prob(qx_samples)
+
+        def _check_reinforce(x_mean, x_std, atol=1e-6, rtol=1e-6):
+            _x_mean = torch.tensor(x_mean)
+            _x_std = torch.tensor(x_std)
+            model = ELBO(TestNet_Gen(_x_mean, _x_std), TestNet_Var(qx_samples, log_qx), estimator='reinforce')
+            #TODO: Check grads when use variance reduction and baseline
+            reinforce_cost = model({}, variance_reduction=False)
+            reinforce_grads = torch.autograd.grad(reinforce_cost, [mu, sigma], retain_graph=True)
+            reinforce_grads = torch.tensor(reinforce_grads).numpy()
+            true_cost = _kl_normal_normal(mu, sigma, _x_mean, _x_std)
+            true_grads = torch.autograd.grad(true_cost, [mu, sigma], retain_graph=True)
+            true_grads = torch.tensor(true_grads).numpy()
+            print('reinforce_grads: ', reinforce_grads)
+            print('true_grads: ', true_grads)
+            np.testing.assert_allclose(reinforce_grads, true_grads, rtol=rtol, atol=atol)
+
+        _check_reinforce(0., 1., rtol=1e-2)
+        _check_reinforce(2., 3., atol=1e-6)
 
 if __name__ == '__main__':
     unittest.main()
