@@ -33,7 +33,7 @@ class Test_Model(BayesianNet):
     def log_joint(self, use_cache=False):
         x = self.observed['x']
         x.requires_grad = True # !check
-        lh_noise = torch.normal(mean=0., std=2., size= x.shape)
+        lh_noise = torch.normal(mean=0., std=2., size=x.shape)
         res = 2 * torch.pow(x, 2) - torch.pow(x, 4) + lh_noise
         return res.sum()
 

@@ -80,7 +80,7 @@ class ELBO(nn.Module):
                 )
                 if len(logqz.shape) > 0 and reduce_mean:
                     baseline_cost = torch.mean(baseline_cost)
-            l_signal = l_signal - baseline
+                l_signal = l_signal - baseline
             # TODO: extend to non-scalar
             if len(logqz.shape) > 0 and reduce_mean:
                 bc = torch.mean(l_signal)
@@ -94,7 +94,7 @@ class ELBO(nn.Module):
             l_signal -= self.moving_mean.detach()
         l_signal = l_signal.detach()
         l_signal.require_grads = False
-        cost = -logpxz - l_signal * logqz
+        cost = - (logpxz + l_signal * logqz)
         if baseline_cost is not None:
             if len(logqz.shape) > 0 and reduce_mean:
                 loss = torch.mean(cost + baseline_cost)
