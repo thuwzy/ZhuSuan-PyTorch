@@ -52,3 +52,31 @@ class SGLD(SGMCMC):
             self._var_list[i] = self._var_list[i] + 0.5 * self.lr * grad[i] + epsilon
             self._var_list[i] = self._var_list[i].detach()
             self._var_list[i].requires_grad = True
+
+class PSGLD(SGLD):
+    """
+        PSGLD with RMSprop preconditioner, "Preconditioned stochastic gradient Langevin dynamics for deep neural networks"
+    """
+
+    def __init__(self, learning_rate, decay=0.9, epsilon=1e-3):
+        super().__init__(learning_rate)
+        self.aux = None
+        self.decay = decay
+        self.epsilon = epsilon
+
+    def _update(self, bn, observed):
+        if not self.aux:
+            self.aux = [torch.zeros_like(q) for q in self._var_list]
+        observed_ = {**dict(zip(self._latent_k, self._var_list)), **observed}
+        bn.forward(observed_)
+
+        log_joint_ = bn.log_joint()
+        grad = torch.autograd.grad(log_joint_, self._var_list)
+
+        for i, _ in enumerate(grad):
+            self.aux[i] = self.decay * self.aux[i] + (1 - self.decay) * torch.pow(grad[i], 2)
+            g = 1 / (self.epsilon + torch.sqrt(self.aux[i]))
+            e = torch.normal(0.0, torch.sqrt(self.lr * g)).to(self.device)
+            self._var_list[i] = self._var_list[i] + 0.5 * self.lr * g * grad[i] + e
+            self._var_list[i] = self._var_list[i].detach()
+            self._var_list[i].requires_grad = True

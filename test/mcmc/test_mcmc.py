@@ -79,10 +79,11 @@ class TestSGMCMC(unittest.TestCase):
         print("the result is :", e)
         assert(e < 0.023)
 
-    # def test_psgld(self):
-    #     sampler = mcmc.PSGLD(learning_rate=0.01)
-    #     e = sample_error_with(sampler, n_chains=100, n_iters=8000, sampler_type='sgld')
-    #     print(e)
+    def test_psgld(self):
+        sampler = mcmc.PSGLD(learning_rate=0.01)
+        e = sample_error_with(sampler, n_chains=100, n_iters=8000, sampler_type='sgld')
+        print(e)
+        assert (e < 0.083) # biased estimation
 
     # def test_sghmc(self):
     #     sampler = mcmc.SGHMC(learning_rate=0.01, n_iter_resample_v=50,
