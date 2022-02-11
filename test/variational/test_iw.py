@@ -141,8 +141,37 @@ class TestImportanceWeightedObjective(unittest.TestCase):
         _check_sgvb(2., 3., 0.02)
 
     def test_vimco(self):
-        # TODO
-        pass
+        eps_samples = torch.tensor(self._n3_samples, dtype=torch.float32)
+        mu = torch.tensor(2., requires_grad=True)
+        sigma = torch.tensor(3., requires_grad=True)
+        qx_samples = eps_samples * sigma + mu
+        norm = Normal(mean=mu, std=sigma)
+        log_qx = norm.log_prob(qx_samples)
+
+        v_qx_samples = eps_samples * sigma.detach() + mu.detach()
+        v_log_qx = norm.log_prob(v_qx_samples)
+        mu.requires_grad = True
+        sigma.requires_grad = True
+
+        def _check_vimco(x_mean, x_std, threshold):
+            _x_mean = torch.tensor(x_mean, requires_grad=False)
+            _x_std = torch.tensor(x_std, requires_grad=False)
+            model_sgvb = ImportanceWeightedObjective(TestNet_Gen(_x_mean, _x_std), TestNet_Var(qx_samples, log_qx),
+                                                     axis=0, estimator='sgvb')
+            model_vimco = ImportanceWeightedObjective(TestNet_Gen(_x_mean, _x_std), TestNet_Var(v_qx_samples, v_log_qx),
+                                                      axis=0, estimator='vimco')
+            vimco_cost = model_vimco({})
+            vimco_grads = torch.autograd.grad(vimco_cost, [mu, sigma], retain_graph=True)
+            vimco_grads = torch.tensor(vimco_grads).numpy()
+            sgvb_cost = model_sgvb({})
+            sgvb_grads = torch.autograd.grad(sgvb_cost, [mu, sigma], retain_graph=True)
+            sgvb_grads = torch.tensor(sgvb_grads).numpy()
+            print("vimco_grads: ", vimco_grads)
+            print("sgvb_grads: ", sgvb_grads)
+
+        _check_vimco(0., 1., 1e-2)
+        _check_vimco(2., 3., 1e-6)
+
 
 if __name__ == '__main__':
     unittest.main()
