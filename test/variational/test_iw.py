@@ -71,7 +71,7 @@ class TestImportanceWeightedObjective(unittest.TestCase):
         self._rng = np.random.RandomState(1)
         self._n1_samples = self._rng.standard_normal(size=(1, 1000)). \
             astype(np.float32)
-        self._n3_samples = self._rng.standard_normal(1000).astype(np.float32)
+        self._n3_samples = self._rng.standard_normal(10000).astype(np.float32)
         super(TestImportanceWeightedObjective, self).setUp()
 
 
@@ -160,13 +160,14 @@ class TestImportanceWeightedObjective(unittest.TestCase):
                                                      axis=0, estimator='sgvb')
             model_vimco = ImportanceWeightedObjective(TestNet_Gen(_x_mean, _x_std), TestNet_Var(v_qx_samples, v_log_qx),
                                                       axis=0, estimator='vimco')
+
             vimco_cost = model_vimco({})
             vimco_grads = torch.autograd.grad(vimco_cost, [mu, sigma], retain_graph=True)
             vimco_grads = torch.tensor(vimco_grads).numpy()
+            print("vimco_grads: ", vimco_grads)
             sgvb_cost = model_sgvb({})
             sgvb_grads = torch.autograd.grad(sgvb_cost, [mu, sigma], retain_graph=True)
             sgvb_grads = torch.tensor(sgvb_grads).numpy()
-            print("vimco_grads: ", vimco_grads)
             print("sgvb_grads: ", sgvb_grads)
             np.testing.assert_allclose(vimco_grads, sgvb_grads, threshold, threshold)
 

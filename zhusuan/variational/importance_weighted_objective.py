@@ -49,6 +49,8 @@ class ImportanceWeightedObjective(nn.Module):
 
         if self.estimator == 'sgvb':
             return self.sgvb(logpxz, logqz, reduce_mean)
+        elif self.estimator == 'naive':
+            return self.naive(logpxz, logqz, reduce_mean)
         else:
             return self.vimco(logpxz, logqz, reduce_mean)
 
@@ -62,6 +64,20 @@ class ImportanceWeightedObjective(nn.Module):
             return torch.mean(-lower_bound)
         else:
             return -lower_bound
+
+    # def naive(self, logpxz, logqz, reduce_mean=True):
+    #     lower_bound = logpxz - logqz
+    #
+    #     l_signal = log_mean_exp(lower_bound.detach(), self._axis, keepdims=True)
+    #     fake_term = torch.sum(logqz * l_signal.detach(), self._axis)
+    #
+    #     if self._axis is not None:
+    #         lower_bound = log_mean_exp(lower_bound, self._axis) + fake_term
+    #
+    #     if reduce_mean:
+    #         return torch.mean(-lower_bound)
+    #     else:
+    #         return -lower_bound
 
     def vimco(self, logpxz, logqz, reduce_mean=True):
         log_w = logpxz - logqz
