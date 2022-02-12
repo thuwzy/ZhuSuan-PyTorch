@@ -81,25 +81,31 @@ class ImportanceWeightedObjective(nn.Module):
         # compute variance reduction term
         mean_expect_signal = (torch.sum(l_signal, dim = self._axis, keepdim=True) - l_signal) \
                             / torch.as_tensor(l_signal.shape[self._axis] - 1, dtype=l_signal.dtype)
-        x, sub_x = l_signal, mean_expect_signal
-        n_dim = torch.as_tensor(x.dim(), dtype=torch.int32)
-        n_dim = torch.unsqueeze(n_dim, -1)
+        # x, sub_x = l_signal, mean_expect_signal
+        # n_dim = torch.as_tensor(x.dim(), dtype=torch.int32)
+        # n_dim = torch.unsqueeze(n_dim, -1)
 
-        axis_dim_mask = torch.as_tensor(torch.nn.functional.one_hot(torch.LongTensor([self._axis]), num_classes = n_dim.numpy()[0]), dtype=torch.bool)
-        original_mask = torch.as_tensor(torch.nn.functional.one_hot(torch.LongTensor([n_dim - 1]), num_classes = n_dim.numpy()[0]), dtype=torch.bool)
-        axis_dim = torch.ones(n_dim) * self._axis
-        originals = torch.ones(n_dim) * (n_dim - 1)
-        perm = torch.where(torch.squeeze(original_mask, dim=-1), axis_dim, torch.arange(n_dim.numpy()[0], dtype=torch.float32))
-        perm = torch.where(torch.squeeze(axis_dim_mask, dim=-1), originals, perm)
-        multiples = torch.cat([torch.ones(n_dim), torch.tensor([x.shape[self._axis]])], 0)
-        multiples = tuple([int(i) for i in multiples.numpy()])
+        # axis_dim_mask = torch.as_tensor(torch.nn.functional.one_hot(torch.LongTensor([self._axis]), num_classes=n_dim.numpy()[0]), dtype=torch.bool)
+        # original_mask = torch.as_tensor(torch.nn.functional.one_hot(torch.LongTensor([n_dim - 1]), num_classes=n_dim.numpy()[0]), dtype=torch.bool)
+        # axis_dim = torch.ones(n_dim) * self._axis
+        # originals = torch.ones(n_dim) * (n_dim - 1)
+        # perm = torch.where(torch.squeeze(original_mask, dim=-1), axis_dim, torch.arange(n_dim.numpy()[0], dtype=torch.float32))
+        # perm = torch.where(torch.squeeze(axis_dim_mask, dim=-1), originals, perm)
+        # multiples = torch.cat([torch.ones(n_dim), torch.tensor([x.shape[self._axis]])], 0)
+        # multiples = tuple([int(i) for i in multiples.numpy()])
+        #
+        # # TODO
+        # perm = tuple([int(i) for i in perm.numpy()])
+        # x = torch.permute(x, perm)
+        # sub_x = torch.permute(sub_x, perm)
+        # x_ex = torch.tile(torch.unsqueeze(x, n_dim.numpy()[0]), multiples)
+        # x_ex = x_ex - torch.diag(x) + torch.diag(sub_x)
+        # control_variate = torch.permute(log_mean_exp(x_ex, n_dim.numpy()[0] - 1), perm)
 
-        perm = tuple([int(i) for i in perm.numpy()])
-        x = torch.permute(x, perm)
-        sub_x = torch.permute(sub_x, perm)
-        x_ex = torch.tile(torch.unsqueeze(x, n_dim.numpy()[0]), multiples)
-        x_ex = x_ex - torch.diag(x) + torch.diag(sub_x)
-        control_variate = torch.permute(log_mean_exp(x_ex, n_dim.numpy()[0] - 1), perm)
+        l_max = torch.max(l_signal, self._axis, True).values
+        control_variate = torch.log(torch.mean(torch.exp(l_signal - l_max), self._axis, True)+
+                        (torch.exp(mean_expect_signal - l_max)-torch.exp(l_signal - l_max))/
+                        torch.as_tensor(l_signal.shape[self._axis], dtype=l_signal.dtype)) + l_max
 
         # variance reduced objective
         l_signal = log_mean_exp(l_signal, self._axis, keepdims=True) - control_variate

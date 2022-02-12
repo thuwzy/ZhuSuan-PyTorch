@@ -168,9 +168,11 @@ class TestImportanceWeightedObjective(unittest.TestCase):
             sgvb_grads = torch.tensor(sgvb_grads).numpy()
             print("vimco_grads: ", vimco_grads)
             print("sgvb_grads: ", sgvb_grads)
+            np.testing.assert_allclose(vimco_grads, sgvb_grads, threshold, threshold)
 
         _check_vimco(0., 1., 1e-2)
         _check_vimco(2., 3., 1e-6)
+        #raise NotImplementedError()
 
 
 if __name__ == '__main__':
