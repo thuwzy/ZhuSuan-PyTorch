@@ -4,7 +4,10 @@ examples/data/*
 examples/result/*
 examples/*/result/*
 .idea/*
-
+build
+tmp
+.coverage
+zhusuan_pytorch.egg-info
 __pycache__/*
 */__pycache__/*
 
