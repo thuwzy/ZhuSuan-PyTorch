@@ -7,9 +7,10 @@ examples/*/result/*
 build
 tmp
 .coverage
-zhusuan_pytorch.egg-info
+coverage-reports
 __pycache__/*
 */__pycache__/*
+.DS_Store
 
 model/*
 result/*
@@ -24,4 +25,4 @@ result/*
 docs/_build/
 data/*
 zhusuan/local/*
-zhusuan_torch.egg-info/*
+zhusuan_pytorch.egg-info

@@ -1,7 +1,12 @@
+# -*- coding: utf-8 -*-
 import torch
 import numpy as np
 
 from zhusuan.distributions.base import Distribution
+from zhusuan.distributions.utils import (
+    assert_same_float_dtype
+)
+
 
 class Normal(Distribution):
     """
@@ -29,33 +34,41 @@ class Normal(Distribution):
         is based on the paper "Sticking the Landing: Simple,
         Lower-Variance Gradient Estimators for Variational Inference"
     """
+
     def __init__(self,
-                 dtype=torch.float32,
-                 is_continues = True,
+                 mean=0.,
+                 std=None,
+                 logstd=None,
+                 dtype=None,
+                 is_continuous=True,
                  is_reparameterized=True,
                  group_ndims=0,
                  device=torch.device('cpu'),
                  **kwargs):
-        super(Normal, self).__init__(dtype,
-                                     is_continues,
-                                     is_reparameterized,
-                                     group_ndims=group_ndims,
-                                     device=device,
-                                     **kwargs)
-        self._mean = kwargs['mean'].to(self.device)
-        if ('logstd' in kwargs) == ('std' in kwargs):
+        self._mean: torch.Tensor = torch.as_tensor(mean, dtype=dtype).to(device)
+        if (logstd is None) == (std is None):
             raise ValueError(
                 "Either `std` or `logstd` should be passed. It is not allowed "
                 "that both are specified or both are not.")
-        elif 'logstd' in kwargs:
-            self._std = torch.exp(torch.as_tensor(kwargs['logstd'], dtype=dtype)).to(self.device)
-        elif 'std' in kwargs:
-            self._std = torch.as_tensor(kwargs['std'], dtype=dtype).to(self.device)
-        #TODO make the input more robust. mean and std may have different sizes.
+        elif std is None:
+            self._std: torch.Tensor = torch.exp(torch.as_tensor(logstd, dtype=dtype)).to(device)
+        else:  # logstd is None:
+            self._std: torch.Tensor = torch.as_tensor(std, dtype=dtype).to(device)
+
+        # check dtype:
+        if dtype is None:
+            dtype = assert_same_float_dtype([(self._mean, "Normal.mean"), (self._std, "Normal.std")])
+
+        super(Normal, self).__init__(dtype=dtype,
+                                     is_continuous=is_continuous,
+                                     is_reparameterized=is_reparameterized,
+                                     group_ndims=group_ndims,
+                                     device=device,
+                                     **kwargs)
 
     def _batch_shape(self):
         return self._mean.shape
-    
+
     def _sample(self, n_samples=1):
         if n_samples > 1:
             _shape = self._mean.shape
