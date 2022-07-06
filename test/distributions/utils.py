@@ -83,6 +83,36 @@ def test_dtype_1parameter_discrete(
             _test_sample_dtype_raise(input_, dtype=torch.bool)
 
 
+def test_float_dtype_1parameter_discrete(
+        test_class, Distribution, prob_only=False, allow_16bit=True):
+    def _test_sample_dtype(input_, result_dtype, **kwargs):
+        distribution = Distribution(input_, **kwargs)
+        samples = distribution.sample(2)
+        # test_class.assertEqual(distribution.dtype, result_dtype)
+        test_class.assertEqual(samples.dtype, result_dtype)
+
+    def _test_sample_dtype_raise(input_, dtype):
+        try:
+            _ = Distribution(input_, dtype=dtype)
+        except:
+            raise TypeError("`dtype`.*not in")
+
+    if not prob_only:
+        for input_elem in [[1.], [[2., 3.], [4., 5.]]]:
+            input_ = torch.tensor(input_elem)
+            if allow_16bit:
+                _test_sample_dtype(input_, torch.int16, dtype=torch.int16)
+                _test_sample_dtype(input_, torch.float16, dtype=torch.float16)
+            else:
+                _test_sample_dtype_raise(input_, dtype=torch.int16)
+                _test_sample_dtype_raise(input_, dtype=torch.float16)
+
+            _test_sample_dtype(input_, torch.float32, dtype=torch.float32)
+            _test_sample_dtype(input_, torch.float64, dtype=torch.float64)
+            _test_sample_dtype_raise(input_, dtype=torch.uint8)
+            _test_sample_dtype_raise(input_, dtype=torch.bool)
+
+
 def test_dtype_2parameter(test_class, Distribution):
     # Test sample dtype
     def _test_sample_dtype(dtype):
@@ -150,7 +180,7 @@ def test_1parameter_log_prob_shape_same(
 
         given = torch.tensor(make_given(given_shape), dtype=torch.float32)
         log_p = dist.log_prob(given)
-        test_class.assertEqual(log_p.shape, target_shape)
+        test_class.assertEqual(list(log_p.shape), target_shape)
 
     _test_dynamic([2, 3], [1, 3], [2, 3])
     _test_dynamic([1, 3], [2, 2, 3], [2, 2, 3])
@@ -191,7 +221,7 @@ def test_1parameter_sample_shape_same(
         param = torch.tensor(make_param(param_shape), dtype=torch.float32)
         dist = Distribution(param)
         samples = dist.sample(n_samples)
-        test_class.assertEqual(samples.shape, target_shape)
+        test_class.assertEqual(list(samples.shape), target_shape)
 
     _test_dynamic([2, 3], 1, [2, 3])
     if not only_one_sample:

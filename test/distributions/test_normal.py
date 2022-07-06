@@ -13,7 +13,7 @@ from scipy.special import logsumexp
 import unittest
 
 from test.distributions import utils
-from zhusuan.distributions.normal import *
+from zhusuan.distributions.normal import Normal
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -52,10 +52,6 @@ class TestNormal(unittest.TestCase):
         dis = Normal(mean=torch.ones([32, 1], dtype=torch.float32),
                      std=torch.ones([32, 1, 3], dtype=torch.float32))
         self.assertEqual(dis._dtype, torch.float32)
-
-        dis = Normal(mean=torch.ones([2, 1], dtype=torch.float16),
-                     std=torch.ones([2, 1], dtype=torch.float16))
-        self.assertEqual(dis._dtype, torch.float16)
 
         std = Normal(mean=0., std=1.)
         self.assertEqual(std._dtype, torch.float32)
