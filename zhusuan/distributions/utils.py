@@ -2,6 +2,7 @@
 import torch
 
 floating_dtypes = (torch.float32, torch.float16, torch.float64)
+log_floating_dtypes = (torch.float32, torch.float16, torch.float64)
 integer_dtypes = (torch.int32, torch.int16, torch.float64)
 
 
@@ -48,3 +49,12 @@ def assert_same_float_dtype(tensors_with_name):
     :return: The type of `tensors`.
     """
     return assert_same_dtype_in(tensors_with_name, floating_dtypes)
+
+def assert_same_log_float_dtype(tensors_with_name):
+    """
+    Whether all tensors in `tensors_with_name` have the same floating type, which also support log/exp operations.
+
+    :param tensors_with_name: A list of (tensor, tensor_name).
+    :return: The type of `tensors`.
+    """
+    return assert_same_dtype_in(tensors_with_name, log_floating_dtypes)

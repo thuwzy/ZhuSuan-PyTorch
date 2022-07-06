@@ -90,8 +90,7 @@ def test_dtype_2parameter(test_class, Distribution):
         param2 = torch.ones([1], dtype=dtype)
         distribution = Distribution(param1, param2)
         test_class.assertEqual(dtype, distribution.sample(1).dtype)
-
-    _test_sample_dtype(torch.float16)
+    # as for pytorch dose not support exp/log operations on float16 tensor, we don't test for that
     _test_sample_dtype(torch.float32)
     _test_sample_dtype(torch.float64)
 
@@ -111,7 +110,6 @@ def test_dtype_2parameter(test_class, Distribution):
         # # test_class.assertEqual(distribution.prob(given_np).dtype, dtype)
         # test_class.assertEqual(distribution.log_prob(given_np).dtype, dtype)
 
-    _test_log_prob_dtype(torch.float16)
     _test_log_prob_dtype(torch.float32)
     _test_log_prob_dtype(torch.float64)
 
@@ -123,7 +121,6 @@ def test_dtype_2parameter(test_class, Distribution):
         test_class.assertEqual(distribution.sample().dtype, result_dtype)
 
 
-    _test_parameter_dtype(torch.float16, torch.float16, torch.float16)
     _test_parameter_dtype(torch.float32, torch.float32, torch.float32)
     _test_parameter_dtype(torch.float64, torch.float64, torch.float64)
 

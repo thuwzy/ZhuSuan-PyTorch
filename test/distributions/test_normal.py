@@ -28,7 +28,7 @@ class TestNormal(unittest.TestCase):
 
     def test_init(self):
         # test given both std and logstd error:
-        with self.assertRaisesRegexp(ValueError, r"Either.*should be passed"):
+        with self.assertRaisesRegex(ValueError, r"Either.*should be passed"):
             Normal(mean=torch.zeros([2, 1]), std=torch.ones([2, 4, 3]), logstd=torch.zeros([2, 2, 3]))
         # try:
         #     Normal(mean=torch.zeros([2, 1]),
@@ -57,7 +57,6 @@ class TestNormal(unittest.TestCase):
                      std=torch.ones([2, 1], dtype=torch.float16))
         self.assertEqual(dis._dtype, torch.float16)
 
-
         std = Normal(mean=0., std=1.)
         self.assertEqual(std._dtype, torch.float32)
 
@@ -66,6 +65,21 @@ class TestNormal(unittest.TestCase):
             self, self._Normal_std, np.zeros, np.ones)
         utils.test_2parameter_sample_shape_same(
             self, self._Normal_logstd, np.zeros, np.zeros)
+
+    def test_batch_shape(self):
+        dis = Normal(mean=torch.ones([32, 1], dtype=torch.float32),
+                     std=torch.ones([32, 1, 3], dtype=torch.float32))
+        dis.batch_shape
+
+    def test_property(self):
+        mean = torch.tensor([1., 2.])
+        std = torch.tensor([1., 4.])
+        dis = Normal(mean=mean, std=std)
+        self.assertTrue(mean.equal(dis.mean))
+        self.assertTrue(std.equal(dis.std))
+        self.assertTrue(torch.log(std).equal(dis.logstd))
+        sample = dis.sample()
+        self.assertTrue(torch.log(dis._prob(sample)).equal(dis.log_prob(sample)))
 
     def test_sample_reparameterized(self):
         mean = torch.ones([2, 3])
@@ -156,10 +170,8 @@ class TestNormal(unittest.TestCase):
             raise AttributeError("log(std).*Tensor had Inf")
 
     def test_dtype(self):
-        # All tensors being 32-bits now becomes a feature, not bug.
-        pass
-        # utils.test_dtype_2parameter(self, self._Normal_std)
-        # utils.test_dtype_2parameter(self, self._Normal_logstd)
+        utils.test_dtype_2parameter(self, self._Normal_std)
+        utils.test_dtype_2parameter(self, self._Normal_logstd)
 
     def test_distribution_shape(self):
         param1 = torch.zeros([1])

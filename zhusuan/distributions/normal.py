@@ -4,7 +4,8 @@ import numpy as np
 
 from zhusuan.distributions.base import Distribution
 from zhusuan.distributions.utils import (
-    assert_same_float_dtype
+    assert_same_float_dtype,
+    assert_same_log_float_dtype,
 )
 
 
@@ -57,7 +58,7 @@ class Normal(Distribution):
 
         # check dtype:
         if dtype is None:
-            dtype = assert_same_float_dtype([(self._mean, "Normal.mean"), (self._std, "Normal.std")])
+            dtype = assert_same_log_float_dtype([(self._mean, "Normal.mean"), (self._std, "Normal.std")])
 
         super(Normal, self).__init__(dtype=dtype,
                                      is_continuous=is_continuous,
@@ -65,6 +66,22 @@ class Normal(Distribution):
                                      group_ndims=group_ndims,
                                      device=device,
                                      **kwargs)
+
+    @property
+    def mean(self):
+        """The mean of the Normal distribution."""
+        return self._mean
+
+    @property
+    def logstd(self):
+        """The log standard deviation of the Normal distribution."""
+        return torch.log(self._std)
+
+    @property
+    def std(self):
+        """The standard deviation of the Normal distribution."""
+        return self._std
+
 
     def _batch_shape(self):
         return self._mean.shape
@@ -106,3 +123,6 @@ class Normal(Distribution):
         precision = torch.exp(-2 * logstd)
         log_prob = c - logstd - 0.5 * precision * ((sample - _mean) ** 2)
         return log_prob
+
+    def _prob(self, given):
+        return torch.exp(self._log_prob(given))
