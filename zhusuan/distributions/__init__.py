@@ -6,5 +6,5 @@ from .gamma import *
 from .laplace import *
 from .uniform import *
 from .studentT import *
-from .possion import *
+from .poisson import *
 from .exponential import *
