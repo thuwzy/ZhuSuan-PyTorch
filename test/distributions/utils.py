@@ -130,7 +130,7 @@ def test_dtype_2parameter(test_class, Distribution):
         distribution = Distribution(param1, param2)
 
         # test for tensor
-        given = torch.zeros([1], dtype=dtype)
+        given = torch.tensor([0.01], dtype=dtype)
         # test_class.assertEqual(distribution.prob(given).dtype, dtype)
         test_class.assertEqual(distribution.log_prob(given).dtype, dtype)
 
