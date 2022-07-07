@@ -29,8 +29,7 @@ class Poisson(Distribution):
             warnings.warn(f"the tensor dtype convert {self._rate.dtype} to  {int2float_mapping[self._rate.dtype]}")
             self._rate = torch.as_tensor(self._rate, dtype=int2float_mapping[self._rate.dtype])
 
-        if dtype is None:
-            dtype = assert_same_log_float_dtype([(self._rate, "Poisson.mean")])
+        dtype = assert_same_log_float_dtype([(self._rate, "Poisson.mean")])
 
         super(Poisson, self).__init__(dtype,
                                       is_continues,

@@ -2,6 +2,10 @@ import torch
 import numpy as np
 
 from zhusuan.distributions.base import Distribution
+from zhusuan.distributions.utils import (
+    assert_same_log_float_dtype
+)
+
 
 class Bernoulli(Distribution):
     """
@@ -22,25 +26,42 @@ class Bernoulli(Distribution):
         See :class:`~zhusuan.distributions.base.Distribution` for more detailed
         explanation.
     """
+
     def __init__(self,
-                 dtype=torch.float32,
+                 logits=None,
+                 probs=None,
+                 dtype=None,
                  is_continues=False,
                  is_reparameterized=True,
                  group_ndims=0,
                  device=torch.device('cpu'),
                  **kwargs):
+        if (logits is None) == (probs is None):
+            raise ValueError(
+                "Either `probs` or `logits` should be passed. It is not allowed "
+                "that both are specified or both are not.")
+        elif logits is None:
+            self._probs: torch.Tensor = torch.as_tensor(probs, dtype=dtype).to(device)
+        else:  # probs is None
+            _logits = torch.as_tensor(logits, dtype=dtype)
+            assert_same_log_float_dtype([(_logits, "Bernoulli.logits")])
+            self._probs: torch.Tensor = torch.sigmoid(_logits).to(device)
+        # dtype of probs must be float32 or float64
+        dtype = assert_same_log_float_dtype([(self._probs, "Bernoulli.probs")])
         super(Bernoulli, self).__init__(dtype,
                                         is_continues,
                                         is_reparameterized,
                                         group_ndims=group_ndims,
                                         device=device,
                                         **kwargs)
-        self._probs = kwargs['probs']
-        self._probs = torch.as_tensor(self._probs, dtype=self._dtype).to(self.device)
 
     @property
     def probs(self):
         return self._probs
+
+    @property
+    def logits(self):
+        return torch.log(self._probs / (torch.ones(self._probs.shape) - self._probs))
 
     def _batch_shape(self):
         return self.probs.shape
@@ -50,9 +71,9 @@ class Bernoulli(Distribution):
             sample_shape = np.concatenate([[n_samples], self.batch_shape], axis=0).tolist()
             _probs = self._probs * torch.ones(sample_shape).to(self.device)
         else:
-            _probs = self._probs# * torch.ones(self.batch_shape)
+            _probs = self._probs  # * torch.ones(self.batch_shape)
 
-        #_probs *= torch.tensor(_probs <= 1, dtype=self._dtype) #! Values larger than 1 are set to 0
+        # _probs *= torch.tensor(_probs <= 1, dtype=self._dtype) #! Values larger than 1 are set to 0
         _sample = torch.bernoulli(_probs)
         self.sample_cache = _sample
         return _sample
@@ -65,8 +86,8 @@ class Bernoulli(Distribution):
             sample_shape = np.concatenate([[sample.shape[0]], self.batch_shape], axis=0).tolist()
             _probs = self._probs * torch.ones(sample_shape).to(self.device)
         else:
-            _probs = self._probs# * torch.ones(self.batch_shape)
+            _probs = self._probs  # * torch.ones(self.batch_shape)
 
         log_prob = sample * torch.log(_probs + 1e-8) + (1 - sample) * torch.log(1 - _probs + 1e-8)
         return log_prob
-        #! Check it again
+        # ! Check it again

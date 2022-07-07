@@ -92,10 +92,8 @@ def test_float_dtype_1parameter_discrete(
         test_class.assertEqual(samples.dtype, result_dtype)
 
     def _test_sample_dtype_raise(input_, dtype):
-        try:
+        with test_class.assertRaises(TypeError):
             _ = Distribution(input_, dtype=dtype)
-        except:
-            raise TypeError("`dtype`.*not in")
 
     if not prob_only:
         for input_elem in [[1.], [[2., 3.], [4., 5.]]]:
@@ -258,7 +256,7 @@ def test_batch_shape_1parameter(
     def _test_dynamic(param_shape):
         param = torch.tensor(make_param(param_shape), dtype=torch.float32)
         dist = Distribution(param)
-        test_class.assertEqual(dist.batch_shape,
+        test_class.assertEqual(list(dist.batch_shape),
                                param_shape if is_univariate else param_shape[:-1])
     if is_univariate:
         _test_dynamic([])
