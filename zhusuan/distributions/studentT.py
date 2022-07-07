@@ -1,5 +1,9 @@
 import torch
 from zhusuan.distributions import Distribution
+from zhusuan.distributions.utils import (
+    assert_same_log_float_dtype
+)
+
 
 class StudentT(Distribution):
     """
@@ -10,22 +14,32 @@ class StudentT(Distribution):
     :param loc: A 'float' Var. Mean of the StudentT distribution.
     :param scale: A 'float' Var. Scale of the StudentT distribution.
     """
+
     def __init__(self,
-                dtype=torch.float32,
-                is_continues=True,
-                group_ndims=0,
-                device=torch.device('cpu'),
-                **kwargs):
+                 df,
+                 loc=0.,
+                 scale=1.,
+                 dtype=None,
+                 is_continues=True,
+                 group_ndims=0,
+                 device=torch.device('cpu'),
+                 **kwargs):
+
+        self._df = torch.as_tensor(df, dtype=dtype).to(device)
+        self._loc = torch.as_tensor(loc, dtype=dtype).to(device)
+        self._scale = torch.as_tensor(scale, dtype=dtype).to(device)
+        dtype = assert_same_log_float_dtype([
+            (self.df, "StudentT.df"),
+            (self.loc, "StudentT.loc"),
+            (self.scale, "StudentT.scale")
+        ])
         super(StudentT, self).__init__(dtype,
                                        is_continues,
-                                       is_reparameterized=False, # reparameterization trick is not applied for Laplace distribution
+                                       is_reparameterized=False,
+                                       # reparameterization trick is not applied for Laplace distribution
                                        group_ndims=group_ndims,
                                        device=device,
                                        **kwargs)
-
-        self._df = torch.as_tensor(kwargs['df'], dtype = self._dtype).to(device) if type(kwargs['df']) in [int, float] else kwargs['df'].to(device)
-        self._loc = torch.as_tensor(kwargs['loc'], dtype = self._dtype).to(device) if type(kwargs['loc']) in [int, float] else kwargs['loc'].to(device)
-        self._scale = torch.as_tensor(kwargs['scale'], dtype = self._dtype).to(device) if type(kwargs['scale']) in [int, float] else kwargs['scale'].to(device)
 
     @property
     def df(self):
@@ -41,6 +55,9 @@ class StudentT(Distribution):
     def scale(self):
         """Scale of the Laplace distribution."""
         return self._scale
+
+    def _batch_shape(self):
+        return torch.broadcast_shapes(self.df.shape, self.scale.shape, self.loc.shape)
 
     def _sample(self, n_samples=1):
         if n_samples > 1:

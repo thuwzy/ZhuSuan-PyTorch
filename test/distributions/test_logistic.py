@@ -35,5 +35,5 @@ class TestLogistic(unittest.TestCase):
     def test_sample_shape(self):
         utils.test_2parameter_sample_shape_same(self, Logistic, torch.ones, torch.ones)
 
-    def test_log_prob_shaple(self):
+    def test_log_prob_shape(self):
         utils.test_2parameter_log_prob_shape_same(self, Logistic, torch.ones, torch.ones, torch.ones)

@@ -4,6 +4,8 @@
 from __future__ import absolute_import
 from __future__ import division
 
+import logging
+
 import torch
 import numpy as np
 
@@ -167,6 +169,66 @@ def test_dtype_2parameter(test_class, Distribution):
     # _test_parameter_dtype_raise(torch.int32, torch.int32)
 
 
+def test_dtype_3parameter(test_class, Distribution):
+    # Test sample dtype
+    # for Beta distrubution, the alpa and beta must greater than zero, so here use 0.01
+    def _test_sample_dtype(dtype):
+        param1 = torch.tensor([0.01], dtype=dtype)
+        param2 = torch.ones([1], dtype=dtype)
+        param3 = torch.ones([2], dtype=dtype)
+        distribution = Distribution(param1, param2, param3)
+        test_class.assertEqual(dtype, distribution.sample(1).dtype)
+
+    # as for pytorch dose not support exp/log operations on float16 tensor, we don't test for that
+    _test_sample_dtype(torch.float32)
+    _test_sample_dtype(torch.float64)
+
+    # Test log_prob and prob dtype
+    def _test_log_prob_dtype(dtype):
+        param1 = torch.tensor([0.01], dtype=dtype)
+        param2 = torch.ones([1], dtype=dtype)
+        param3 = torch.ones([2], dtype=dtype)
+        distribution = Distribution(param1, param2, param3)
+
+        # test for tensor
+        given = torch.tensor([0.01], dtype=dtype)
+        # test_class.assertEqual(distribution.prob(given).dtype, dtype)
+        test_class.assertEqual(distribution.log_prob(given).dtype, dtype)
+
+        # # test for numpy
+        # given_np = torch.tensor(given.numpy())
+        # # test_class.assertEqual(distribution.prob(given_np).dtype, dtype)
+        # test_class.assertEqual(distribution.log_prob(given_np).dtype, dtype)
+
+    _test_log_prob_dtype(torch.float32)
+    _test_log_prob_dtype(torch.float64)
+
+    # Test dtype for parameters
+    def _test_parameter_dtype(result_dtype, param1_dtype, param2_dtype, param3_dtype):
+        param1 = torch.tensor([0.01], dtype=param1_dtype)
+        param2 = torch.ones([1], dtype=param2_dtype)
+        param3 = torch.ones([2], dtype=param3_dtype)
+        distribution = Distribution(param1, param2, param3)
+        test_class.assertEqual(distribution.sample().dtype, result_dtype)
+
+    _test_parameter_dtype(torch.float32, torch.float32, torch.float32, torch.float32)
+    _test_parameter_dtype(torch.float64, torch.float64, torch.float64, torch.float64)
+
+    # def _test_parameter_dtype_raise(param1_dtype, param2_dtype):
+    #     if param1_dtype != param2_dtype:
+    #         regexp_msg = "must have the same dtype as"
+    #     else:
+    #         regexp_msg = "must have a dtype in"
+    #     try:
+    #         _test_parameter_dtype(None, param1_dtype, param2_dtype)
+    #     except:
+    #         raise TypeError(regexp_msg)
+    #
+    # _test_parameter_dtype_raise(torch.float16, torch.float32)
+    # _test_parameter_dtype_raise(torch.float32, torch.float64)
+    # _test_parameter_dtype_raise(torch.int32, torch.int32)
+
+
 def test_1parameter_log_prob_shape_same(
         test_class, Distribution, make_param, make_given):
     def _test_dynamic(param_shape, given_shape, target_shape):
@@ -271,7 +333,25 @@ def test_batch_shape_2parameter_univariate(
     _test_dynamic([2, 3], [3], [2, 3])
     _test_dynamic([2, 1, 4], [2, 3, 4], [2, 3, 4])
     _test_dynamic([2, 3, 5], [3, 1], [2, 3, 5])
-    # try:
-    #     _test_dynamic([2, 3, 5], [3, 2], None)
-    # except:
-    #     AssertionError("Incompatible shapes")
+    with test_class.assertRaises(RuntimeError):
+        _test_dynamic([2, 3, 5], [3, 2], None)
+
+
+def test_batch_shape_3parameter_univariate(
+        test_class, Distribution, make_param1, make_param2, make_param3):
+    # dynamic
+    def _test_dynamic(param1_shape, param2_shape, param3_shape, target_shape):
+        param1 = torch.tensor(make_param1(param1_shape), dtype=torch.float32)
+        param2 = torch.tensor(make_param2(param2_shape), dtype=torch.float32)
+        param3 = torch.tensor(make_param2(param3_shape), dtype=torch.float32)
+        dist = Distribution(param1, param2, param3)
+        # test_class.assertTrue(np.array(dist.batch_shape).dtype is np.int32)
+        test_class.assertEqual(list(dist.batch_shape), target_shape)
+        return list(dist.batch_shape)
+
+    # _test_dynamic([2, 3], [], [2, 3])
+    _test_dynamic([2, 3], [3], [1, 3], [2, 3])
+    _test_dynamic([2, 1, 4], [2, 3, 4], [2, 1, 1], [2, 3, 4])
+    _test_dynamic([2, 3, 5], [3, 1], [1], [2, 3, 5])
+    with test_class.assertRaises(RuntimeError):
+        _test_dynamic([2, 3, 5], [3, 2], [1], None)

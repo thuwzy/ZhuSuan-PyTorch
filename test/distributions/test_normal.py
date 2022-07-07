@@ -30,11 +30,6 @@ class TestNormal(unittest.TestCase):
         # test given both std and logstd error:
         with self.assertRaisesRegex(ValueError, r"Either.*should be passed"):
             Normal(mean=torch.zeros([2, 1]), std=torch.ones([2, 4, 3]), logstd=torch.zeros([2, 2, 3]))
-        # try:
-        #     Normal(mean=torch.zeros([2, 1]),
-        #            std=torch.ones([2, 4, 3]), logstd=torch.zeros([2, 2, 3]))
-        # except:
-        #     raise ValueError("Either.*should be passed")
 
         # try:
         #     Normal(mean=torch.zeros([2, 1]), logstd=torch.zeros([2, 4, 3]))
