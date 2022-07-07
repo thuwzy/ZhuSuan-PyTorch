@@ -15,6 +15,7 @@ class Bernoulli(Distribution):
     :param logits: A `float` Tensor. The log-odds of probabilities of being 1.
 
         .. math:: \\mathrm{logits} = \\log \\frac{p}{1 - p}
+    :param probs: A 'float' Tensor. The p param of bernoulli distribution
 
     :param dtype: The value type of samples from the distribution. Can be
         int (`torch.int16`, `torch.int32`, `torch.int64`) or float (`torch.float16`,
