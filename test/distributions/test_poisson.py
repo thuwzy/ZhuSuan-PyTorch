@@ -29,6 +29,9 @@ class TestPoisson(unittest.TestCase):
     def test_sample_shape(self):
         utils.test_1parameter_sample_shape_same(self, Poisson, torch.ones)
 
+    def test_batch_shape(self):
+        utils.test_batch_shape_1parameter(self, Poisson, torch.ones, True)
+
     def test_log_porb_shape(self):
         utils.test_1parameter_log_prob_shape_same(self, Poisson, torch.ones, torch.ones)
 

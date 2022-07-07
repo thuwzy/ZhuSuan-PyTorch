@@ -44,6 +44,9 @@ class Poisson(Distribution):
         """Shape parameter of the Poisson distribution."""
         return self._rate
 
+    def _batch_shape(self):
+        return self._rate.shape
+
     def _sample(self, n_samples=1):
         if n_samples > 1:
             _shape = self._rate.shape
