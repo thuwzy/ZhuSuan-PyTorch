@@ -16,12 +16,12 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 class TestLaplace(unittest.TestCase):
 
     def test_init(self):
-        gamma = Laplace(0.1, 0.2)
-        self.assertEqual(gamma.loc, torch.tensor(0.1))
-        self.assertEqual(gamma.scale, torch.tensor(0.2))
-        self.assertEqual(gamma._dtype, torch.float32)
-        gamma = Laplace(torch.tensor([1., 2.]), torch.tensor([[1., 2.], [2., 3.]]))
-        self.assertTrue(gamma.loc.equal(torch.tensor([1., 2.])))
+        lap = Laplace(0.1, 0.2)
+        self.assertEqual(lap.loc, torch.tensor(0.1))
+        self.assertEqual(lap.scale, torch.tensor(0.2))
+        self.assertEqual(lap._dtype, torch.float32)
+        lap = Laplace(torch.tensor([1., 2.]), torch.tensor([[1., 2.], [2., 3.]]))
+        self.assertTrue(lap.loc.equal(torch.tensor([1., 2.])))
 
         with self.assertRaisesRegex(TypeError, r"must have a dtype in"):
             Laplace(loc=2, scale=2, dtype=torch.int64)

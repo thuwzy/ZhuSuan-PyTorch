@@ -74,7 +74,7 @@ class TestNormal(unittest.TestCase):
         self.assertTrue(std.equal(dis.std))
         self.assertTrue(torch.log(std).equal(dis.logstd))
         sample = dis.sample()
-        self.assertTrue(torch.log(dis._prob(sample)).equal(dis.log_prob(sample)))
+        self.assertTrue(torch.norm(torch.log(dis._prob(sample)) - dis.log_prob(sample)) < 1e-6)
 
     def test_sample_reparameterized(self):
         mean = torch.ones([2, 3])
