@@ -16,7 +16,8 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 class TestExponential(unittest.TestCase):
 
     def test_init(self):
-        Exponential(1.)
+        exp = Exponential(1.)
+        self.assertEqual(exp._dtype, torch.float32)
         Exponential(torch.tensor([1., 2., 3.]))
         with self.assertRaisesRegex(TypeError, r"must have a dtype in"):
             Exponential(0, dtype=torch.int64)
