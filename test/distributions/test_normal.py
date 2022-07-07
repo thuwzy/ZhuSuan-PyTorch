@@ -63,9 +63,8 @@ class TestNormal(unittest.TestCase):
             self, self._Normal_logstd, np.zeros, np.zeros)
 
     def test_batch_shape(self):
-        dis = Normal(mean=torch.ones([32, 1], dtype=torch.float32),
-                     std=torch.ones([32, 1, 3], dtype=torch.float32))
-        dis.batch_shape
+        utils.test_batch_shape_2parameter_univariate(self, self._Normal_std, torch.zeros, torch.ones)
+        utils.test_batch_shape_2parameter_univariate(self, self._Normal_logstd, torch.zeros, torch.ones)
 
     def test_property(self):
         mean = torch.tensor([1., 2.])

@@ -84,7 +84,7 @@ class Normal(Distribution):
 
 
     def _batch_shape(self):
-        return self._mean.shape
+        return torch.broadcast_shapes(self.mean.shape, self.std.shape)
 
     def _sample(self, n_samples=1):
         if n_samples > 1:

@@ -46,7 +46,7 @@ class TestBernoulli(unittest.TestCase):
     def test_dtype(self):
         utils.test_float_dtype_1parameter_discrete(self, Bernoulli, allow_16bit=False)
 
-    def test_log_prob_shaple(self):
+    def test_log_prob_shape(self):
         utils.test_1parameter_log_prob_shape_same(self, Bernoulli, torch.ones, torch.ones)
 
     def test_value(self):
