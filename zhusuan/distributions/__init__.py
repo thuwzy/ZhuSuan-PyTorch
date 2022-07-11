@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 from .normal import *
 from .bernoulli import *
 from .logistic import *
