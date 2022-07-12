@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import torch
 
+
 def log_mean_exp(x, dim=None, keepdims=False):
     """
     Numerically stable log mean of exps across the `dim`.
@@ -14,11 +15,7 @@ def log_mean_exp(x, dim=None, keepdims=False):
         x.
     """
     x_max = torch.max(x, dim, True).values
-    ret = torch.log(torch.mean(torch.exp(x - x_max), dim,
-                                True)) + x_max
+    ret = torch.log(torch.mean(torch.exp(x - x_max), dim, True)) + x_max
     if not keepdims:
         ret = torch.mean(ret, dim=dim)
     return ret
-
-
-

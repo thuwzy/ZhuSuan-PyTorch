@@ -108,7 +108,7 @@ def main():
 
     generator = Generator(x_dim, z_dim, lb_samples)
     variational = Variational(x_dim, z_dim, lb_samples)
-    model = ImportanceWeightedObjective(generator, variational, axis=0).to(device)
+    model = ImportanceWeightedObjective(generator, variational, axis=0, estimator="vimco").to(device)
 
     optimizer = torch.optim.Adam(model.parameters(), lr)
 

@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 
 from zhusuan import log_mean_exp
+
 __all__ = [
     'iw_objective',
     'ImportanceWeightedObjective',
@@ -25,7 +26,6 @@ class ImportanceWeightedObjective(nn.Module):
             raise NotImplementedError()
         self.estimator = estimator
 
-
     def log_joint(self, nodes):
         log_joint_ = None
         for n_name in nodes.keys():
@@ -39,7 +39,7 @@ class ImportanceWeightedObjective(nn.Module):
     def forward(self, observed, reduce_mean=True):
         nodes_q = self.variational(observed).nodes
 
-        _v_inputs = {k:v.tensor for k,v in nodes_q.items()}
+        _v_inputs = {k: v.tensor for k, v in nodes_q.items()}
         _observed = {**_v_inputs, **observed}
 
         nodes_p = self.generator(_observed).nodes
@@ -83,6 +83,29 @@ class ImportanceWeightedObjective(nn.Module):
         log_w = logpxz - logqz
         l_signal = log_w
 
+        # mode = "original"
+        # if mode == 'original':
+        #     ####################### ORIGINAL IMPLEMENTAION #######################
+        #     # numerical stability (found in original implementation)
+        #     log_w_minus_max = log_w - log_w.max(1, keepdim=True)[0]
+        #     # compute normalized importance weights (no gradient)
+        #     w = log_w_minus_max.exp()
+        #     w_tilde = (w / w.sum(axis=self._axis, keepdim=True)).detach()
+        #     # compute loss (negative IWAE objective)
+        #     loss = -(w_tilde * log_w).sum(1).mean()
+        # elif mode == 'normalized weights':
+        #     ######################## LOG-NORMALIZED TRICK ########################
+        #     # copmute normalized importance weights (no gradient)
+        #     log_w_tilde = log_w - torch.logsumexp(log_w, dim=1, keepdim=True)
+        #     w_tilde = log_w_tilde.exp().detach()
+        #     # compute loss (negative IWAE objective)
+        #     loss = -(w_tilde * log_w).sum(1).mean()
+        # elif mode == 'fast':
+        #     ########################## SIMPLE AND FAST ###########################
+        #     pass
+        #     # loss = -log_likelihood
+        # return loss
+
         # check size along the sample axis
         err_msg = "VIMCO is a multi-sample gradient estimator, size along " \
                   "`axis` in the objective should be larger than 1."
@@ -95,8 +118,8 @@ class ImportanceWeightedObjective(nn.Module):
             raise ValueError(err_msg)
 
         # compute variance reduction term
-        mean_expect_signal = (torch.sum(l_signal, dim = self._axis, keepdim=True) - l_signal) \
-                            / torch.as_tensor(l_signal.shape[self._axis] - 1, dtype=l_signal.dtype)
+        mean_expect_signal = (torch.sum(l_signal, dim=self._axis, keepdim=True) - l_signal) \
+                             / torch.as_tensor(l_signal.shape[self._axis] - 1, dtype=l_signal.dtype)
         # x, sub_x = l_signal, mean_expect_signal
         # n_dim = torch.as_tensor(x.dim(), dtype=torch.int32)
         # n_dim = torch.unsqueeze(n_dim, -1)
@@ -119,15 +142,15 @@ class ImportanceWeightedObjective(nn.Module):
         # control_variate = torch.permute(log_mean_exp(x_ex, n_dim.numpy()[0] - 1), perm)
 
         l_max = torch.max(l_signal, self._axis, True).values
-        control_variate = torch.log(torch.mean(torch.exp(l_signal - l_max), self._axis, True)+
-                        (torch.exp(mean_expect_signal - l_max)-torch.exp(l_signal - l_max))/
-                        torch.as_tensor(l_signal.shape[self._axis], dtype=l_signal.dtype)) + l_max
+        control_variate = torch.log(torch.mean(torch.exp(l_signal - l_max), self._axis, True) +
+                                    (torch.exp(mean_expect_signal - l_max) - torch.exp(l_signal - l_max)) /
+                                    torch.as_tensor(l_signal.shape[self._axis], dtype=l_signal.dtype)) + l_max
 
         # variance reduced objective
         l_signal = log_mean_exp(l_signal, self._axis, keepdims=True) - control_variate
         fake_term = torch.sum(logqz * l_signal.detach(), self._axis)
         cost = -fake_term - log_mean_exp(log_w, self._axis)
-
+        cost = cost.mean()
         return cost
 
 
