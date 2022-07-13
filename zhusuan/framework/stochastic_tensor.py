@@ -1,6 +1,5 @@
 import torch
 from zhusuan.distributions.base import Distribution
-from zhusuan.framework.bn import BayesianNet
 
 
 class StochasticTensor(object):
@@ -39,13 +38,13 @@ class StochasticTensor(object):
     """
 
     def __init__(self,
-                 bn: BayesianNet,
+                 bn,
                  name: str,
                  dist: Distribution,
                  observation=None, **kwargs):
         if bn is None:
             pass
-        self._bn: BayesianNet = bn
+        self._bn = bn
         self._name: str = name
         self._dist: Distribution = dist
         self._dtype: torch.dtype = dist.dtype
@@ -59,8 +58,11 @@ class StochasticTensor(object):
         self._multiplier = kwargs.get("multiplier", None)
 
     def _check_observation(self, observation):
-        if observation.dtype != self._dist.dtype:
-            raise TypeError("the observation dtype must be the same as distribution dtype")
+        if observation is None:
+            return
+        elif observation.dtype != self.dtype:
+            # convert observation to need dtype
+            observation = torch.as_tensor(observation, self.dtype)
         return observation
 
     @property

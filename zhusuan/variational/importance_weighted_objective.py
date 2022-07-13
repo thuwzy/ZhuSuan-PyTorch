@@ -1,3 +1,5 @@
+import warnings
+
 import torch
 import torch.nn as nn
 
@@ -28,20 +30,28 @@ class ImportanceWeightedObjective(nn.Module):
 
     def log_joint(self, nodes):
         log_joint_ = None
+        # TODO
         for n_name in nodes.keys():
+            print(f"log joint {n_name} {nodes[n_name].shape}")
             try:
                 log_joint_ += nodes[n_name].log_prob()
             except:
+                warnings.warn(f"exception getted in log_joint method, using current node {n_name}")
                 log_joint_ = nodes[n_name].log_prob()
 
         return log_joint_
 
     def forward(self, observed, reduce_mean=True):
-        # feed forward observation to the variational
-        nodes_q = self.variational(observed).nodes
-
+        # feed forward observation to the variational(comments are based on iwae case)
+        self.variational(observed)
+        nodes_q: dict = self.variational.nodes
+        # TODO
         _v_inputs = {k: v.tensor for k, v in nodes_q.items()}
+        for k, v in _v_inputs.items():
+            print(f"v_inputs {k} shape:{v.shape},")
         _observed = {**_v_inputs, **observed}
+        for k, v in _observed.items():
+            print(f"input of generator: {k} shape {v.shape}")
         nodes_p = self.generator(_observed).nodes
 
         logpxz = self.log_joint(nodes_p)
@@ -80,31 +90,12 @@ class ImportanceWeightedObjective(nn.Module):
     #         return -lower_bound
 
     def vimco(self, logpxz, logqz, reduce_mean=True):
+        # TODO
+        print(f"in loss compute shape of logpxz {logpxz.shape} shape of qz {logqz.shape}")
         log_w = logpxz - logqz
         l_signal = log_w
 
-        # mode = "original"
-        # if mode == 'original':
-        #     ####################### ORIGINAL IMPLEMENTAION #######################
-        #     # numerical stability (found in original implementation)
-        #     log_w_minus_max = log_w - log_w.max(1, keepdim=True)[0]
-        #     # compute normalized importance weights (no gradient)
-        #     w = log_w_minus_max.exp()
-        #     w_tilde = (w / w.sum(axis=self._axis, keepdim=True)).detach()
-        #     # compute loss (negative IWAE objective)
-        #     loss = -(w_tilde * log_w).sum(1).mean()
-        # elif mode == 'normalized weights':
-        #     ######################## LOG-NORMALIZED TRICK ########################
-        #     # copmute normalized importance weights (no gradient)
-        #     log_w_tilde = log_w - torch.logsumexp(log_w, dim=1, keepdim=True)
-        #     w_tilde = log_w_tilde.exp().detach()
-        #     # compute loss (negative IWAE objective)
-        #     loss = -(w_tilde * log_w).sum(1).mean()
-        # elif mode == 'fast':
-        #     ########################## SIMPLE AND FAST ###########################
-        #     pass
-        #     # loss = -log_likelihood
-        # return loss
+
 
         # check size along the sample axis
         err_msg = "VIMCO is a multi-sample gradient estimator, size along " \
@@ -112,6 +103,7 @@ class ImportanceWeightedObjective(nn.Module):
         try:
             _shape = l_signal.shape
             _ = _shape[self._axis:self._axis + 1]
+            print(_)
             if _shape[self._axis] < 2:
                 raise ValueError(err_msg)
         except:
@@ -142,6 +134,7 @@ class ImportanceWeightedObjective(nn.Module):
         # control_variate = torch.permute(log_mean_exp(x_ex, n_dim.numpy()[0] - 1), perm)
 
         l_max = torch.max(l_signal, self._axis, True).values
+        print(f"max shape {l_max.shape}")
         control_variate = torch.log(torch.mean(torch.exp(l_signal - l_max), self._axis, True) +
                                     (torch.exp(mean_expect_signal - l_max) - torch.exp(l_signal - l_max)) /
                                     torch.as_tensor(l_signal.shape[self._axis], dtype=l_signal.dtype)) + l_max
