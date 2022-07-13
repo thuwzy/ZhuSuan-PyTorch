@@ -57,8 +57,7 @@ class Normal(Distribution):
             self._std: torch.Tensor = torch.as_tensor(std, dtype=dtype).to(device)
 
         # check dtype:
-        if dtype is None:
-            dtype = assert_same_log_float_dtype([(self._mean, "Normal.mean"), (self._std, "Normal.std")])
+        dtype = assert_same_log_float_dtype([(self._mean, "Normal.mean"), (self._std, "Normal.std")])
 
         super(Normal, self).__init__(dtype=dtype,
                                      is_continuous=is_continuous,
