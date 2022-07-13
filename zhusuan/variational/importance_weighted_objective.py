@@ -32,11 +32,11 @@ class ImportanceWeightedObjective(nn.Module):
         log_joint_ = None
         # TODO
         for n_name in nodes.keys():
-            print(f"log joint {n_name} {nodes[n_name].shape}")
+            # print(f"log joint {n_name} {nodes[n_name].shape}")
             try:
                 log_joint_ += nodes[n_name].log_prob()
             except:
-                warnings.warn(f"exception getted in log_joint method, using current node {n_name}")
+                # warnings.warn(f"exception getted in log_joint method, using current node {n_name}")
                 log_joint_ = nodes[n_name].log_prob()
 
         return log_joint_
@@ -47,11 +47,11 @@ class ImportanceWeightedObjective(nn.Module):
         nodes_q: dict = self.variational.nodes
         # TODO
         _v_inputs = {k: v.tensor for k, v in nodes_q.items()}
-        for k, v in _v_inputs.items():
-            print(f"v_inputs {k} shape:{v.shape},")
+        # for k, v in _v_inputs.items():
+        #     print(f"v_inputs {k} shape:{v.shape},")
         _observed = {**_v_inputs, **observed}
-        for k, v in _observed.items():
-            print(f"input of generator: {k} shape {v.shape}")
+        # for k, v in _observed.items():
+        #     print(f"input of generator: {k} shape {v.shape}")
         nodes_p = self.generator(_observed).nodes
 
         logpxz = self.log_joint(nodes_p)
