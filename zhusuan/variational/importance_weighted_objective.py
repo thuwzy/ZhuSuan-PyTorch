@@ -37,11 +37,11 @@ class ImportanceWeightedObjective(nn.Module):
         return log_joint_
 
     def forward(self, observed, reduce_mean=True):
+        # feed forward observation to the variational
         nodes_q = self.variational(observed).nodes
 
         _v_inputs = {k: v.tensor for k, v in nodes_q.items()}
         _observed = {**_v_inputs, **observed}
-
         nodes_p = self.generator(_observed).nodes
 
         logpxz = self.log_joint(nodes_p)
