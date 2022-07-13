@@ -124,6 +124,20 @@ class StochasticTensor(object):
             _samples = self._dist.sample(n_samples=self._n_samples)
             return _samples
 
+    def sample(self, force=False):
+        """
+        The value of this :class:`StochasticTensor`. If it is observed, then
+        the observation is returned, otherwise samples are returned.
+        :param force: force to sample, disregard the observed value, default as False
+        :return: A Var.
+        """
+        if self._name in self._bn.observed.keys() and not force:
+            self._dist.sample_cache = self._bn.observed[self._name]
+            return self._bn.observed[self._name]
+        else:
+            _samples = self._dist.sample(n_samples=self._n_samples)
+            return _samples
+
     @property
     def shape(self):
         """

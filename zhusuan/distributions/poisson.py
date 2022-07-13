@@ -7,6 +7,7 @@ from zhusuan.distributions.utils import (
     int2float_mapping
 )
 
+
 class Poisson(Distribution):
     """
     The class of univariate Poisson distribution

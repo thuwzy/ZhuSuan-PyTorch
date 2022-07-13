@@ -5,6 +5,20 @@ import torch.nn as nn
 from zhusuan.framework.stochastic_tensor import StochasticTensor
 from zhusuan.distributions import *
 
+name_mapping = {
+    "Normal": Normal,
+    "Bernoulli": Bernoulli,
+    "Beta": Beta,
+    "Exponential": Exponential,
+    "Gamma": Gamma,
+    "Laplace": Laplace,
+    "Logistic": Logistic,
+    "Poisson": Poisson,
+    "StudentT": StudentT,
+    "Uniform": Uniform
+}
+
+
 class BayesianNet(nn.Module):
     def __init__(self, observed=None):
         """
@@ -53,7 +67,7 @@ class BayesianNet(nn.Module):
         self._cache = {}
         self._observed = observed if observed else {}
 
-        self._device = torch.device('cpu') #! NOTICE: device default as CPU
+        self._device = torch.device('cpu')  # ! NOTICE: device default as CPU
 
     @property
     def nodes(self):
@@ -61,7 +75,7 @@ class BayesianNet(nn.Module):
         The dictionary of all named stochastic nodes in this :class:`BayesianNet`.
         
         :return: A dict.
-        """        
+        """
         return self._nodes
 
     @property
@@ -79,8 +93,8 @@ class BayesianNet(nn.Module):
         The device this module lies at.
         
         :return: torch.device
-        """    
-        try: 
+        """
+        try:
             return next(self.parameters()).device
         except:
             return self._device
@@ -131,8 +145,13 @@ class BayesianNet(nn.Module):
         :param **kwargs: Parameters of the distribution which the node builds with.
         :return: A instance(sample) of the node.
         """
-        _dist = globals()[distribution](device=self.device, **kwargs) #TODO: `globals()` is unsafe
-        self._nodes[name] = StochasticTensor(self, name, _dist, **kwargs)
+        if isinstance(distribution, str):
+            _dist = name_mapping[distribution](device=self.device, **kwargs)
+            self._nodes[name] = StochasticTensor(self, name, _dist, **kwargs)
+        elif isinstance(distribution, Distribution):
+            self._nodes[name] = distribution
+        else:
+            raise ValueError('distribution must be name of sub class of Distribution or an instance of Distribution')
         return self._nodes[name].tensor
 
     def _log_joint(self):
@@ -154,7 +173,7 @@ class BayesianNet(nn.Module):
 
         :return: A Var.
         """
-        #TODO: Why summing over?
+        # TODO: Why summing over?
         if use_cache:
             if not hasattr(self, '_log_joint_cache'):
                 self._log_joint_cache = self._log_joint()
