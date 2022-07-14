@@ -45,6 +45,8 @@ class ELBO(nn.Module):
         self.variational(observed)
         nodes_q = self.variational.nodes
 
+        # .tensor property has a hidden process of sampling,
+        # v.tensor returns sample of node if the node is not observed
         _v_inputs = {k: v.tensor for k, v in nodes_q.items()}
         _observed = {**_v_inputs, **observed}
 
