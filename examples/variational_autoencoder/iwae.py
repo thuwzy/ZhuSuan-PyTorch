@@ -119,11 +119,11 @@ def main():
 
     lr = 0.001
 
-    lb_samples = 50
+    lb_samples = 3
 
     generator = Generator(x_dim, z_dim, lb_samples)
     variational = Variational(x_dim, z_dim, lb_samples)
-    model = ImportanceWeightedObjective(generator, variational, axis=0, estimator="sgvb").to(device)
+    model = ImportanceWeightedObjective(generator, variational, axis=0, estimator="vimco").to(device)
 
     optimizer = torch.optim.Adam(model.parameters(), lr)
 
@@ -135,7 +135,7 @@ def main():
     len_ = x_train.shape[0]
     num_batches = math.ceil(len_ / batch_size)
 
-    for epoch in range(epoch_size):
+    for epoch in range(1):
         for step in range(num_batches):
             x = x_train[step * batch_size:min((step + 1) * batch_size, len_)]
             x = torch.reshape(x, [-1, x_dim])
@@ -145,8 +145,10 @@ def main():
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            if (step + 1) % 100 == 0:
-                print("Epoch[{}/{}], Step [{}/{}], Loss: {:.4f}".format(epoch + 1, epoch_size, step + 1, num_batches,
+            if(step == 15):
+                print("ok")
+            # if (step + 1) % 100 == 0:
+            print("Epoch[{}/{}], Step [{}/{}], Loss: {:.4f}".format(epoch + 1, epoch_size, step + 1, num_batches,
                                                                         loss.clone().cpu().detach().numpy()))
                 # float(loss.clone().detach().numpy())))
     end = time.time()
