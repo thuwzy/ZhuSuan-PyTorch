@@ -50,6 +50,7 @@ class Generator(BayesianNet):
                     mean=mean,
                     std=std,
                     reparameterize=False,
+                    is_reparameterized=False,
                     n_samples=self.n_samples,
                     reduce_mean_dims=None,
                     reduce_sum_dims=[2]
@@ -85,7 +86,6 @@ class Variational(BayesianNet):
         self.output_logstd = nn.Linear(hidden_dim, z_dim)
 
     def forward(self, observed):
-        # print("forward of encoder")
         self.observe(observed)
         x = self.observed['x']
         z_logits = self.output_logits(x)
@@ -99,12 +99,12 @@ class Variational(BayesianNet):
                     name="z",
                     mean=z_mean,
                     std=z_std,
-                    reparameterize=True,
+                    reparameterize=False,
+                    is_reparameterized=False,
                     n_samples=self.n_samples,
                     reduce_mean_dims=None,
                     reduce_sum_dims=[2]
                     )
-        # print("after encoder forward sample")
         return self
 
 
@@ -119,7 +119,7 @@ def main():
 
     lr = 0.001
 
-    lb_samples = 3
+    lb_samples = 40
 
     generator = Generator(x_dim, z_dim, lb_samples)
     variational = Variational(x_dim, z_dim, lb_samples)
@@ -135,7 +135,7 @@ def main():
     len_ = x_train.shape[0]
     num_batches = math.ceil(len_ / batch_size)
 
-    for epoch in range(1):
+    for epoch in range(epoch_size):
         for step in range(num_batches):
             x = x_train[step * batch_size:min((step + 1) * batch_size, len_)]
             x = torch.reshape(x, [-1, x_dim])
@@ -145,8 +145,6 @@ def main():
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            if(step == 15):
-                print("ok")
             # if (step + 1) % 100 == 0:
             print("Epoch[{}/{}], Step [{}/{}], Loss: {:.4f}".format(epoch + 1, epoch_size, step + 1, num_batches,
                                                                         loss.clone().cpu().detach().numpy()))
