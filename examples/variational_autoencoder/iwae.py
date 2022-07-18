@@ -49,7 +49,6 @@ class Generator(BayesianNet):
                     name="z",
                     mean=mean,
                     std=std,
-                    reparameterize=False,
                     is_reparameterized=False,
                     n_samples=self.n_samples,
                     reduce_mean_dims=None,
@@ -99,7 +98,6 @@ class Variational(BayesianNet):
                     name="z",
                     mean=z_mean,
                     std=z_std,
-                    reparameterize=False,
                     is_reparameterized=False,
                     n_samples=self.n_samples,
                     reduce_mean_dims=None,
@@ -135,7 +133,7 @@ def main():
     len_ = x_train.shape[0]
     num_batches = math.ceil(len_ / batch_size)
 
-    for epoch in range(epoch_size):
+    for epoch in range(1):
         for step in range(num_batches):
             x = x_train[step * batch_size:min((step + 1) * batch_size, len_)]
             x = torch.reshape(x, [-1, x_dim])
@@ -145,8 +143,8 @@ def main():
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            # if (step + 1) % 100 == 0:
-            print("Epoch[{}/{}], Step [{}/{}], Loss: {:.4f}".format(epoch + 1, epoch_size, step + 1, num_batches,
+            if (step + 1) % 100 == 0:
+                print("Epoch[{}/{}], Step [{}/{}], Loss: {:.4f}".format(epoch + 1, epoch_size, step + 1, num_batches,
                                                                         loss.clone().cpu().detach().numpy()))
                 # float(loss.clone().detach().numpy())))
     end = time.time()

@@ -12,6 +12,17 @@ __all__ = [
 ]
 
 
+def compute_iw_term(x, axis):
+    """
+    compute the importance weighted gradient estimation using Numerically stable method
+    param x: log(w) term
+    """
+    x_max = torch.max(x, axis, keepdim=True).values
+    w: torch.Tensor = (x - x_max).exp()
+    w_tilde = (w / w.sum(dim=axis, keepdim=True)).detach()
+    return (w_tilde * x).sum(axis)
+
+
 class ImportanceWeightedObjective(nn.Module):
     def __init__(self, generator, variational, axis=None, estimator='sgvb'):
         super().__init__()
@@ -61,10 +72,11 @@ class ImportanceWeightedObjective(nn.Module):
             return self.vimco(logpxz, logqz, reduce_mean)
 
     def sgvb(self, logpxz, logqz, reduce_mean=True):
-        lower_bound = logpxz - logqz
-
+        log_w = logpxz - logqz
         if self._axis is not None:
-            lower_bound = log_mean_exp(lower_bound, self._axis)
+            lower_bound = compute_iw_term(log_w, self._axis)
+        else:
+            lower_bound = log_w
 
         if reduce_mean:
             return torch.mean(-lower_bound)
@@ -78,11 +90,7 @@ class ImportanceWeightedObjective(nn.Module):
         fake_term = torch.sum(logqz * l_signal.detach(), self._axis)
 
         if self._axis is not None:
-            w_max = torch.max(log_w, self._axis, True).values
-            log_w_minus_max = log_w - w_max
-            w = log_w_minus_max.exp()
-            w_tilde = (w / w.sum(axis=self._axis, keepdim=True)).detach()
-            iw_term = (w_tilde * log_w).sum(self._axis)
+            iw_term = compute_iw_term(log_w, self._axis)
             log_w = iw_term + fake_term
 
         if reduce_mean:
@@ -130,58 +138,31 @@ class ImportanceWeightedObjective(nn.Module):
             L = fake_term + iw_term
             return -L.mean()
 
-        # x, sub_x = l_signal, mean_expect_signal
-        # int_dim = x.dim()
-        # n_dim = torch.as_tensor(x.dim(), dtype=torch.int32)
-        # # print(n_dim)
-        # axis_dim_mask = torch.as_tensor(F.one_hot(torch.tensor(self._axis), num_classes=n_dim), dtype=torch.bool)
-        # # print("axis mask", axis_dim_mask)
-        # original_mask = torch.as_tensor(F.one_hot(torch.tensor(x.dim() - 1), num_classes=n_dim), dtype=torch.bool)
-        # # print("original mask", original_mask)
-        #
-        # axis_dim = torch.ones(int_dim, dtype=torch.int32) * self._axis
-        # # print("axis_dim", axis_dim)
-        # originals = torch.ones(int_dim, dtype=torch.int32) * (int_dim - 1)
-        # # print("origins", originals)
-        # perm = torch.where(original_mask, axis_dim, torch.arange(int_dim, dtype=torch.int32))
-        # perm = torch.where(axis_dim_mask, originals, perm)
-        # # print(perm)
-        # multiples = torch.concat([torch.ones([int_dim], dtype=torch.int32), torch.tensor([x.shape[self._axis]])], 0)
+        def copyed(log_w):
+            l_signal = log_w
+            mean_expect_signal = (torch.sum(l_signal, dim=self._axis, keepdim=True) - l_signal) \
+                                 / torch.as_tensor(l_signal.shape[self._axis] - 1, dtype=l_signal.dtype)
+            x, sub_x = l_signal, mean_expect_signal
+            int_dim = x.dim()
+            n_dim = torch.as_tensor(x.dim(), dtype=torch.int32)
+            axis_dim_mask = torch.as_tensor(F.one_hot(torch.tensor(self._axis), num_classes=n_dim), dtype=torch.bool)
+            original_mask = torch.as_tensor(F.one_hot(torch.tensor(x.dim() - 1), num_classes=n_dim), dtype=torch.bool)
+            axis_dim = torch.ones(int_dim, dtype=torch.int32) * self._axis
+            originals = torch.ones(int_dim, dtype=torch.int32) * (int_dim - 1)
+            perm = torch.where(original_mask, axis_dim, torch.arange(int_dim, dtype=torch.int32))
+            perm = torch.where(axis_dim_mask, originals, perm)
+            multiples = torch.concat([torch.ones([int_dim], dtype=torch.int32), torch.tensor([x.shape[self._axis]])], 0)
+            x = torch.transpose(x, *list(perm))
+            sub_x = torch.transpose(sub_x, *list(perm))
+            x_ex = torch.tile(torch.unsqueeze(x, int_dim), tuple(multiples))
+            x_ex = x_ex - torch.diag_embed(x) + torch.diag_embed(sub_x)
+            control_variate = torch.permute(log_mean_exp(x_ex, int_dim - 1), list(perm))
+            l_signal = log_mean_exp(l_signal, self._axis, keepdims=True) - control_variate
+            fake_term = torch.sum(logqz * l_signal.detach(), self._axis)
+            cost = -fake_term - log_mean_exp(log_w, self._axis)
+            return cost.mean()
 
-        # print(multiples)
-        # print(x)
-        # x = torch.transpose(x, *list(perm))
-        # sub_x = torch.transpose(sub_x, *list(perm))
-        # x_ex = torch.tile(torch.unsqueeze(x, int_dim), tuple(multiples))
-        # # print(x, sub_x)
-        # # print("diag",  torch.diag_embed(x)[0], torch.diag_embed(sub_x)[0])
-        # x_ex = x_ex - torch.diag_embed(x) + torch.diag_embed(sub_x)
-        # # print(x_ex)
-        # control_variate = torch.permute(log_mean_exp(x_ex, int_dim - 1), list(perm))
-        # print(f"cv {control_variate, control_variate.shape}")
-
-        # perm = torch.where(torch.squeeze(original_mask, dim=-1), axis_dim, torch.arange(n_dim.numpy()[0], dtype=torch.float32))
-        # perm = torch.where(torch.squeeze(axis_dim_mask, dim=-1), originals, perm)
-        # multiples = torch.cat([torch.ones(n_dim), torch.tensor([x.shape[self._axis]])], 0)
-        # multiples = tuple([int(i) for i in multiples.numpy()])
-        #
-        # # TODO
-        # perm = tuple([int(i) for i in perm.numpy()])
-        # x = torch.permute(x, perm)
-        # sub_x = torch.permute(sub_x, perm)
-        # x_ex = torch.tile(torch.unsqueeze(x, n_dim.numpy()[0]), multiples)
-        # x_ex = x_ex - torch.diag(x) + torch.diag(sub_x)
-        # control_variate = torch.permute(log_mean_exp(x_ex, n_dim.numpy()[0] - 1), perm)
-
-        # l_max = torch.max(l_signal, self._axis, True).values
-        # control_variate = torch.log(torch.mean(torch.exp(l_signal - l_max), self._axis, True) +
-        #                             (torch.exp(mean_expect_signal - l_max) - torch.exp(l_signal - l_max)) /
-        #                             torch.as_tensor(l_signal.shape[self._axis], dtype=l_signal.dtype)) + l_max
-
-        # variance reduced objective
-
-        # l_signal = log_mean_exp(l_signal, self._axis, keepdims=True) - control_variate
-
+        return copyed(log_w)
         # L = log_mean_exp(log_w, self._axis)
         # print(fake_term, log_mean_exp(log_w, self._axis))
 
