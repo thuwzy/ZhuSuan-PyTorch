@@ -24,7 +24,7 @@ class ImportanceWeightedObjective(nn.Module):
                 "the `axis` argument must be specified.")
         self._axis = axis
 
-        supported_estimator = ['sgvb', 'vimco']
+        supported_estimator = ['sgvb', 'vimco', "naive"]
         if estimator not in supported_estimator:
             raise NotImplementedError()
         self.estimator = estimator
@@ -32,9 +32,7 @@ class ImportanceWeightedObjective(nn.Module):
     def log_joint(self, nodes):
         log_joint_ = None
         for n_name in nodes.keys():
-            print(n_name)
             adder = nodes[n_name].log_prob()
-            print("log prob shape:", adder.shape)
             if log_joint_ is None:
                 log_joint_ = torch.zeros(adder.shape)
             log_joint_ += adder
@@ -73,19 +71,24 @@ class ImportanceWeightedObjective(nn.Module):
         else:
             return -lower_bound
 
-    # def naive(self, logpxz, logqz, reduce_mean=True):
-    #     lower_bound = logpxz - logqz
-    #
-    #     l_signal = log_mean_exp(lower_bound.detach(), self._axis, keepdims=True)
-    #     fake_term = torch.sum(logqz * l_signal.detach(), self._axis)
-    #
-    #     if self._axis is not None:
-    #         lower_bound = log_mean_exp(lower_bound, self._axis) + fake_term
-    #
-    #     if reduce_mean:
-    #         return torch.mean(-lower_bound)
-    #     else:
-    #         return -lower_bound
+    def naive(self, logpxz, logqz, reduce_mean=True):
+        log_w = logpxz - logqz
+
+        l_signal = log_mean_exp(log_w, self._axis, keepdims=True)
+        fake_term = torch.sum(logqz * l_signal.detach(), self._axis)
+
+        if self._axis is not None:
+            w_max = torch.max(log_w, self._axis, True).values
+            log_w_minus_max = log_w - w_max
+            w = log_w_minus_max.exp()
+            w_tilde = (w / w.sum(axis=self._axis, keepdim=True)).detach()
+            iw_term = (w_tilde * log_w).sum(self._axis)
+            log_w = iw_term + fake_term
+
+        if reduce_mean:
+            return torch.mean(-log_w)
+        else:
+            return - log_w
 
     def vimco(self, logpxz, logqz, reduce_mean=True):
         # TODO
@@ -101,20 +104,31 @@ class ImportanceWeightedObjective(nn.Module):
                 raise ValueError(err_msg)
         except:
             raise ValueError(err_msg)
-        # compute origin L(h^1:k)
-        origin_l = log_mean_exp(log_w, dim=self._axis, keepdims=True)
-        num_sample = log_w.shape[self._axis]
-        w_max = torch.max(log_w, self._axis, True).values
-        # compute variance reduction term
-        # compute independent sum of f(x,h^i)
-        subed = log_w - w_max
-        sum_item = (torch.sum(subed.exp(), dim=self._axis, keepdim=True) - subed.exp())
-        # compute independent estimate of f(h^j) by geometric mean
-        estimate_fhj = (((torch.sum(log_w, dim=self._axis) - log_w) / (num_sample - 1)) - w_max).exp()
-        # compute baseline term
-        base = torch.log((sum_item + estimate_fhj) / num_sample) + w_max
-        l_signal = (origin_l - base).detach()
-        print(l_signal)
+
+        def my_apply(log_w):
+            # compute origin L(h^1:k)
+            origin_l = log_mean_exp(log_w, dim=self._axis, keepdims=True)
+            num_sample = log_w.shape[self._axis]
+            w_max = torch.max(log_w, self._axis, True).values
+            # compute variance reduction term
+            # compute independent sum of f(x,h^i)
+            subed = log_w - w_max
+            sum_item = (torch.sum(subed.exp(), dim=self._axis, keepdim=True) - subed.exp())
+            # compute independent estimate of f(h^j) by geometric mean
+            estimate_fhj = (((torch.sum(log_w, dim=self._axis) - log_w) / (num_sample - 1)) - w_max).exp()
+            # compute baseline term
+            base = torch.log((sum_item + estimate_fhj) / num_sample) + w_max
+            l_signal = (origin_l - base).detach()
+            fake_term = torch.sum(logqz * l_signal, self._axis)
+
+            log_w_minus_max = log_w - w_max
+            # compute normalized importance weights (no gradient)
+            w = log_w_minus_max.exp()
+            w_tilde = (w / w.sum(axis=self._axis, keepdim=True)).detach()
+            # compute loss (negative IWAE objective)
+            iw_term = (w_tilde * log_w).sum(self._axis)
+            L = fake_term + iw_term
+            return -L.mean()
 
         # x, sub_x = l_signal, mean_expect_signal
         # int_dim = x.dim()
@@ -167,11 +181,9 @@ class ImportanceWeightedObjective(nn.Module):
         # variance reduced objective
 
         # l_signal = log_mean_exp(l_signal, self._axis, keepdims=True) - control_variate
-        # fake_term = torch.sum(logqz * l_signal.detach(), self._axis)
-        # L = fake_term + log_mean_exp(log_w, self._axis)
-        L = log_mean_exp(log_w, self._axis)
+
+        # L = log_mean_exp(log_w, self._axis)
         # print(fake_term, log_mean_exp(log_w, self._axis))
-        return -L.mean()
 
 
 iw_objective = 'ImportanceWeightedObjective',
