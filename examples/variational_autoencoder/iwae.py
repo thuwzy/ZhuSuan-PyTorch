@@ -2,7 +2,6 @@ import math
 import os
 import sys
 import time
-
 import torch
 import torch.nn as nn
 
@@ -133,7 +132,7 @@ def main():
     num_batches = math.ceil(len_ / batch_size)
 
     for epoch in range(1):
-        for step in range(1):
+        for step in range(num_batches):
             x = x_train[step * batch_size:min((step + 1) * batch_size, len_)]
             x = torch.reshape(x, [-1, x_dim])
             if x.shape[0] != batch_size:
