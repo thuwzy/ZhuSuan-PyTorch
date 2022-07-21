@@ -3,6 +3,7 @@ import warnings
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from zhusuan.framework.stochastic_tensor import StochasticTensor
 
 from zhusuan import log_mean_exp
 
@@ -57,7 +58,14 @@ class ImportanceWeightedObjective(nn.Module):
         # feed forward observation to the variational(comments are based on iwae case)
         self.variational(observed)
         nodes_q: dict = self.variational.nodes
-        _v_inputs = {k: v.tensor for k, v in nodes_q.items()}
+        _v_inputs = {}
+        for k, v in nodes_q.items():
+            _v_inputs[k] = v.tensor
+            if self.estimator == "vimco" \
+                and isinstance(v, StochasticTensor)\
+                    and v.dist.is_reparameterized:
+                raise ValueError("with vimco estimator, the is_reparameterized must be false")
+
         _observed = {**_v_inputs, **observed}
         nodes_p = self.generator(_observed).nodes
 

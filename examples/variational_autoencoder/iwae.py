@@ -131,7 +131,7 @@ def main():
     len_ = x_train.shape[0]
     num_batches = math.ceil(len_ / batch_size)
 
-    for epoch in range(1):
+    for epoch in range(epoch_size):
         for step in range(num_batches):
             x = x_train[step * batch_size:min((step + 1) * batch_size, len_)]
             x = torch.reshape(x, [-1, x_dim])
