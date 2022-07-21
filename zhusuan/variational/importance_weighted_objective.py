@@ -113,8 +113,9 @@ class ImportanceWeightedObjective(nn.Module):
         except:
             raise ValueError(err_msg)
 
-        def my_apply(log_w):
+        def my_apply(logpxz, logqz):
             # compute origin L(h^1:k)
+            log_w = logpxz - logqz
             origin_l = log_mean_exp(log_w, dim=self._axis, keepdims=True)
             num_sample = log_w.shape[self._axis]
             w_max = torch.max(log_w, self._axis, True).values
@@ -126,15 +127,9 @@ class ImportanceWeightedObjective(nn.Module):
             estimate_fhj = (((torch.sum(log_w, dim=self._axis) - log_w) / (num_sample - 1)) - w_max).exp()
             # compute baseline term
             base = torch.log((sum_item + estimate_fhj) / num_sample) + w_max
-            l_signal = (origin_l - base).detach()
-            fake_term = torch.sum(logqz * l_signal, self._axis)
-
-            log_w_minus_max = log_w - w_max
-            # compute normalized importance weights (no gradient)
-            w = log_w_minus_max.exp()
-            w_tilde = (w / w.sum(axis=self._axis, keepdim=True)).detach()
-            # compute loss (negative IWAE objective)
-            iw_term = (w_tilde * log_w).sum(self._axis)
+            l_signal = origin_l - base
+            fake_term = torch.sum(l_signal.detach() * logqz, self._axis)
+            iw_term = compute_iw_term(log_w, self._axis)
             L = fake_term + iw_term
             return -L.mean()
 
@@ -152,17 +147,20 @@ class ImportanceWeightedObjective(nn.Module):
             perm = torch.where(original_mask, axis_dim, torch.arange(int_dim, dtype=torch.int32))
             perm = torch.where(axis_dim_mask, originals, perm)
             multiples = torch.concat([torch.ones([int_dim], dtype=torch.int32), torch.tensor([x.shape[self._axis]])], 0)
-            x = torch.transpose(x, *list(perm))
-            sub_x = torch.transpose(sub_x, *list(perm))
+            if len(perm) > 1:
+                x = torch.transpose(x, *list(perm))
+                sub_x = torch.transpose(sub_x, *list(perm))
             x_ex = torch.tile(torch.unsqueeze(x, int_dim), tuple(multiples))
             x_ex = x_ex - torch.diag_embed(x) + torch.diag_embed(sub_x)
             control_variate = torch.permute(log_mean_exp(x_ex, int_dim - 1), list(perm))
             l_signal = log_mean_exp(l_signal, self._axis, keepdims=True) - control_variate
             fake_term = torch.sum(logqz * l_signal.detach(), self._axis)
-            cost = -fake_term - log_mean_exp(log_w, self._axis)
+            iw_term = compute_iw_term(log_w, self._axis)
+            cost = -fake_term - iw_term
             return cost.mean()
 
         return copyed(log_w)
+        # return my_apply(logpxz, logqz)
         # L = log_mean_exp(log_w, self._axis)
         # print(fake_term, log_mean_exp(log_w, self._axis))
 

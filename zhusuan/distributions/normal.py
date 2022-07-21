@@ -119,37 +119,8 @@ class Normal(Distribution):
         logstd = torch.log(_std).to(self.device)
         c = torch.tensor(-0.5 * np.log(2 * np.pi)).to(self.device)
         precision = torch.exp(-2 * logstd)
-        # precision = torch.where(torch.isinf(precision), torch.full_like(precision, 1e10), precision)
         log_prob = c - logstd - 0.5 * precision * ((sample - _mean) ** 2)
 
-        def print_m(t):
-            for i in range(t.shape[0]):
-                for j in range(t.shape[1]):
-                    print("{:.2f} ,".format(t[i][j]), end="")
-                print()
-
-        if torch.any(torch.isnan(log_prob)):
-            if torch.any(torch.isnan(precision)):
-                print("preci")
-            elif torch.any(torch.isnan(logstd)):
-                print("std")
-            elif torch.any(torch.isnan(((sample - _mean) ** 2))):
-                print(sample)
-                print(_mean)
-                print("????")
-            elif torch.any(torch.isnan(precision * ((sample - _mean) ** 2))):
-                print("??")
-                zeo = ((sample - _mean) ** 2)
-                ans = precision * zeo
-                for index1 in range(ans.shape[0]):
-                    if torch.any(torch.isnan(ans[index1])):
-                        for index2 in range(ans.shape[1]):
-                            if torch.any(torch.isnan(ans[index1][index2])):
-                                print(ans[index1][index2])
-                                print(precision[index1][index2])
-                                print(zeo[index1][index2])
-                                break
-            exit(1)
         return log_prob
 
     def _prob(self, given):

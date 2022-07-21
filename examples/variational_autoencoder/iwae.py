@@ -34,7 +34,6 @@ class Generator(BayesianNet):
         this step will add the observed (name:tensor) pair to the
         self._obseved dict
         """
-        # print("forward of decoder")
         self.observe(observed)
 
         try:
@@ -134,7 +133,7 @@ def main():
     num_batches = math.ceil(len_ / batch_size)
 
     for epoch in range(1):
-        for step in range(num_batches):
+        for step in range(1):
             x = x_train[step * batch_size:min((step + 1) * batch_size, len_)]
             x = torch.reshape(x, [-1, x_dim])
             if x.shape[0] != batch_size:
