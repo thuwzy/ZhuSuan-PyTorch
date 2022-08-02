@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 from zhusuan.distributions import Distribution
 from zhusuan.distributions.utils import (
     assert_same_log_float_dtype
@@ -45,6 +46,13 @@ class Logistic(Distribution):
         return torch.broadcast_shapes(self._loc.shape, self._scale.shape)
 
     def _sample(self, n_samples=1, **kwargs):
+        if 'shape' in kwargs.keys():
+            shape = kwargs['shape']
+            uniform = np.random.uniform(low=0., high=1., size=shape)
+            uniform = torch.as_tensor(uniform, dtype=self.dtype)
+            # uniform = paddle.distribution.Uniform(low=float(np.finfo(np.float32).tiny), high=1.).sample(shape=shape)
+            sample_ = torch.log(uniform) - torch.log1p(-uniform)
+            return sample_ * self._scale + self._loc
         if n_samples > 1:
             _shape = self._loc.shape
             _shape = torch.Size([n_samples]) + _shape

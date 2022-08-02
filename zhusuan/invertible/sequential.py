@@ -8,9 +8,9 @@ from zhusuan.invertible.base import RevNet
 class RevSequential(RevNet):
     def __init__(self, layers):
         super(RevSequential, self).__init__()
-        self.layers = layers
-        for flow in self.layers:
+        for flow in layers:
             assert isinstance(flow, RevNet)
+        self.layers = torch.nn.ModuleList(layers)
 
     def _forward(self, *inputs, **kwargs):
         logdet_items = []
@@ -29,13 +29,12 @@ class RevSequential(RevNet):
 
         return x, sum(logdet_items) if logdet_items else torch.zeros([])
 
-    def _inverse(self, *inputs, **kwargs):
+    def _inverse(self, *y, **kwargs):
         logdet_item = []
-        y = None
         for flow in reversed(self.layers):
             y = flow(*y, reverse=True, **kwargs)
             assert isinstance(y, tuple)
-            assert len(y) > 2
+            assert len(y) >= 2
             if y[-1] is not None:
                 logdet_item.append(y[-1])
             if isinstance(y[0], tuple):

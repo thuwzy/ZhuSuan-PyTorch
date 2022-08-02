@@ -124,11 +124,11 @@ class BayesianNet(nn.Module):
             self._observed[k] = v
         return self
 
-    def sn(self, *args, **kwargs):
+    def sn(self, dist, name, **kwargs):
         """
         Short cut for method :meth:`~zhusuan.framework.bn.BayesianNet.stochastic_node`
         """
-        return self.stochastic_node(*args, **kwargs)
+        return self.stochastic_node(dist, name, **kwargs)
 
     def snode(self, *args, **kwargs):
         """
@@ -149,7 +149,8 @@ class BayesianNet(nn.Module):
             _dist = name_mapping[distribution](device=self.device, **kwargs)
             self._nodes[name] = StochasticTensor(self, name, _dist, **kwargs)
         elif isinstance(distribution, Distribution):
-            self._nodes[name] = distribution
+            distribution._device = self.device
+            self._nodes[name] = StochasticTensor(self, name, distribution, **kwargs)
         else:
             raise ValueError('distribution must be name of sub class of Distribution or an instance of Distribution')
         return self._nodes[name].tensor

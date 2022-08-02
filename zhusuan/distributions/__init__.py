@@ -10,3 +10,4 @@ from .uniform import *
 from .studentT import *
 from .poisson import *
 from .exponential import *
+from .flow_distribution import FlowDistribution

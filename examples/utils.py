@@ -3,9 +3,11 @@ import math
 import gzip
 import six
 import numpy as np
+import torch
 from six.moves import urllib, range
 from six.moves import cPickle as pickle
 from PIL import Image
+from torch.utils.data import DataLoader, TensorDataset
 from matplotlib import pyplot as plt
 
 pbar = None
@@ -172,3 +174,41 @@ def load_uci_boston_housing(path, dtype=np.float32):
     x_test, y_test = data[index_test, :-1], data[index_test, -1]
 
     return x_train, y_train, x_val, y_val, x_test, y_test
+
+
+def fetch_dataloaders(dataset_name, batch_size, dequantify=True, logit_transform=True):
+    if dataset_name in ['MNIST']:
+        x_train, y_train, x_valid, y_valid, x_test, y_test = load_mnist_realval(dequantify=dequantify, logit_transform=logit_transform)
+        lam = 1.0e-6
+
+        # join train and val data again
+        x_train = np.concatenate((x_train, x_valid), axis=0).astype(np.float32)
+        y_train = np.concatenate((y_train, y_valid), axis=0).astype(np.float32)
+
+        # construct datasets
+        train_dataset = TensorDataset(torch.as_tensor(x_train), torch.as_tensor(y_train))
+        test_dataset = TensorDataset(torch.as_tensor(x_test), torch.as_tensor(y_test))
+        n_dims = (1, 28, 28)
+        label_size = 10
+
+    else:
+        raise ValueError('Unrecognized datasets')
+
+    train_dataset.input_dims = n_dims
+    train_dataset.input_size = int(np.prod(n_dims))
+    train_dataset.label_size = label_size
+    train_dataset.lam = lam
+
+    test_dataset.input_dims = n_dims
+    test_dataset.input_size = int(np.prod(n_dims))
+    test_dataset.label_size = label_size
+    test_dataset.lam = lam
+
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+
+    return train_loader, test_loader
+
+def check_dir(path):
+    if not os.path.exists(path):
+        os.makedirs(path, exist_ok=True)
