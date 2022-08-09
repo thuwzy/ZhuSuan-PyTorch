@@ -9,6 +9,7 @@ __all__ = [
 
 class FlowDistribution(Distribution):
     def __init__(self, latents=None, transformation=None, flow_kwargs=None, dtype=torch.float32, group_ndims=0,
+                 device=torch.device('cpu'),
                  **kwargs):
         self._latents = latents
         self._transformation = transformation
@@ -19,6 +20,7 @@ class FlowDistribution(Distribution):
             is_continuous=True,
             is_reparameterized=False,
             group_ndims=group_ndims,
+            device=device,
             **kwargs
         )
 

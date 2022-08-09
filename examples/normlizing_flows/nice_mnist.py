@@ -41,10 +41,10 @@ class NICE(BayesianNet):
 
 
 def main():
-    batch_size = 200
-    epoch_size = 100
+    batch_size = 100
+    epoch_size = 10
     sample_size = 64
-    coupling = 4
+    coupling = 10
     mask_config = 1.
 
     # Optim Parameters
@@ -52,7 +52,7 @@ def main():
 
     full_dim = 1 * 28 * 28
     mid_dim = 1000
-    hidden = 5
+    hidden = 10
 
     model = NICE(num_coupling=coupling,
                  in_out_dim=full_dim,
@@ -67,7 +67,8 @@ def main():
             model.train()
             optimizer.zero_grad()
             inputs = data[0]
-            loss = -model.nodes['x'].log_prob(inputs).mean()
+            # loss = -model.nodes['x'].log_prob(inputs).mean()
+            loss = -model(inputs).mean()
             loss.backward()
             optimizer.step()
             stats.append(loss.detach().numpy())
