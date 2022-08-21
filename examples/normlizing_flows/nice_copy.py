@@ -3,6 +3,8 @@ import os
 import torch
 import numpy as np
 import torch.nn as nn
+
+import zhusuan.distributions
 from examples.utils import fetch_dataloaders, save_img, check_dir
 import torch.nn.functional as F
 import IPython
@@ -155,7 +157,7 @@ class NICE(nn.Module):
         return self.scaling(x)
 
     def sample(self, size):
-        z = self.prior.sample((size, self.in_out_dim))
+        z = self.prior.sample(shape=(size, self.in_out_dim))
         return self.g(z)
 
     def log_porb(self, x):
@@ -195,7 +197,7 @@ class StandardLogistic(torch.distributions.Distribution):
 
 def main():
     batch_size = 200
-    epoch_size = 40
+    epoch_size = 16
     sample_size = 64
     coupling = 4
     mask_config = 1.
@@ -207,7 +209,7 @@ def main():
     mid_dim = 1000
     hidden = 5
     prior = StandardLogistic()
-
+    prior = zhusuan.distributions.Logistic(loc=[0.], scale=[1.])
     model = NICE(prior=prior,
                  coupling=coupling,
                  in_out_dim=full_dim,
@@ -220,23 +222,23 @@ def main():
     transform = torchvision.transforms.ToTensor()
     trainset = torchvision.datasets.MNIST(root='./data/MNIST',
                                           train=True, download=True, transform=transform)
-    trainloader = torch.utils.data.DataLoader(trainset,
-                                              batch_size=batch_size, shuffle=True, num_workers=2)
+    # train_loader = torch.utils.data.DataLoader(trainset,
+    #                                           batch_size=batch_size, shuffle=True, num_workers=2)
 
-    train_dataloader, test_dataloader = fetch_dataloaders('MNIST', batch_size, logit_transform=False, dequantify=False)
+    train_loader, test_dataloader = fetch_dataloaders('MNIST', batch_size, logit_transform=False, dequantify=False)
     num_iter = -1
     mean = torch.load('./mnist_mean.pt')
     # for i in model.parameters():
     #     print(i.shape)
     for epoch in range(epoch_size):
         stats = []
-        for _, data in enumerate(trainloader):
+        for _, data in enumerate(train_loader):
             model.train()
             optimizer.zero_grad()
             inputs = data[0]
-            inputs = prepare_data(
-                inputs, 'mnist', zca=None, mean=mean)
-            # loss = -model.nodes['x'].log_prob(inputs).mean()
+            # inputs = inputs.reshape([batch_size, 1, 28, 28])
+            # inputs = prepare_data(
+            #     inputs, 'mnist', zca=None, mean=mean)
             loss = -model(inputs).mean()
             loss.backward()
             optimizer.step()
@@ -248,16 +250,11 @@ def main():
                     path = os.path.join(os.getcwd(), 'results', 'NICE')
                     check_dir(path)
                     samples = model.sample(sample_size).cpu()
-                    samples = prepare_data(
-                        samples, 'mnist', zca=None, mean=mean, reverse=True)
-
-                    # torchvision.utils.save_image(torchvision.utils.make_grid(samples.clone()),
-                    #                              path + '/samples/' + "sample" + 'iter%d.png' % num_iter)
-                    # IPython.embed()
-                    # save_img(reconst.numpy(), os.path.join(path, "recons{}.png".format(num_iter)))
-                    # samples = model.sample(64)
                     # samples = prepare_data(
                     #     samples, 'mnist', zca=None, mean=mean, reverse=True)
+                    samples = samples.reshape([sample_size, 1, 28, 28])
+                    torchvision.utils.save_image(torchvision.utils.make_grid(samples.clone()),
+                                                 path + '/samples/' + "sample" + 'iter%d.png' % num_iter)
                     samples = samples.reshape([sample_size, -1])
                     save_img(samples.numpy(), os.path.join(path, "sample{}.png".format(num_iter)))
         print("Epoch:[{}/{}], Log Likelihood: {:.4f} iter{}".format(

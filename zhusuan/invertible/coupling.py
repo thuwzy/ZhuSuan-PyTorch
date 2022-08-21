@@ -56,3 +56,75 @@ class AdditiveCoupling(RevNet):
         shift = self.nn(y1)
         x1, x2 = y1, y2 - shift * (1. - self.mask)
         return x1 + x2, None
+
+
+class Coupling(RevNet):
+    def __init__(self, in_out_dim, mid_dim, hidden, mask_config):
+        """Initialize a coupling layer.
+
+        Args:
+            in_out_dim: input/output dimensions.
+            mid_dim: number of units in a hidden layer.
+            hidden: number of hidden layers.
+            mask_config: 1 if transform odd units, 0 if transform even units.
+        """
+        super(Coupling, self).__init__()
+        self.mask_config = mask_config
+
+        self.in_block = nn.Sequential(
+            nn.Linear(in_out_dim//2, mid_dim),
+            nn.ReLU())
+        self.mid_block = nn.ModuleList([
+            nn.Sequential(
+                nn.Linear(mid_dim, mid_dim),
+                nn.ReLU()) for _ in range(hidden - 1)])
+        self.out_block = nn.Linear(mid_dim, in_out_dim//2)
+
+    def _forward(self, x, **kwargs):
+        """Forward pass.
+
+        Args:
+            x: input tensor.
+            reverse: True in inference mode, False in sampling mode.
+        Returns:
+            transformed tensor.
+        """
+        [B, W] = list(x.size())
+        x = x.reshape((B, W//2, 2))
+        if self.mask_config:
+            on, off = x[:, :, 0], x[:, :, 1]
+        else:
+            off, on = x[:, :, 0], x[:, :, 1]
+
+        off_ = self.in_block(off)
+        for i in range(len(self.mid_block)):
+            off_ = self.mid_block[i](off_)
+        shift = self.out_block(off_)
+        on = on + shift
+
+        if self.mask_config:
+            x = torch.stack((on, off), dim=2)
+        else:
+            x = torch.stack((off, on), dim=2)
+        return x.reshape((B, W)), None
+
+
+    def _inverse(self, x, **kwargs):
+        [B, W] = list(x.size())
+        x = x.reshape((B, W // 2, 2))
+        if self.mask_config:
+            on, off = x[:, :, 0], x[:, :, 1]
+        else:
+            off, on = x[:, :, 0], x[:, :, 1]
+
+        off_ = self.in_block(off)
+        for i in range(len(self.mid_block)):
+            off_ = self.mid_block[i](off_)
+        shift = self.out_block(off_)
+        on = on - shift
+
+        if self.mask_config:
+            x = torch.stack((on, off), dim=2)
+        else:
+            x = torch.stack((off, on), dim=2)
+        return x.reshape((B, W)), None

@@ -32,27 +32,29 @@ class NICE(BayesianNet):
         self.sn(flow_dis, name="x", n_samples=-1)
 
     def sample(self, size):
-        return self.nodes["x"].dist.sample(shape=[size, self.in_out_dim])
+        z = self.prior.sample((size, self.in_out_dim))
+        return z
+        # return self.nodes["x"].dist.sample(shape=[size, self.in_out_dim])
 
     def forward(self, x):
         z, log_det_J = self.flow.forward(x, reverse=False)
-        log_ll = torch.sum(self.nodes["prior_x"].dist.log_prob(z[0]) + log_det_J, dim=1)
-        return log_ll
+        log_ll = torch.sum(self.nodes["prior_x"].dist.log_prob(z[0]), dim=1)
+        return log_ll + log_det_J
 
 
 def main():
-    batch_size = 100
-    epoch_size = 10
+    batch_size = 200
+    epoch_size = 14
     sample_size = 64
-    coupling = 10
+    coupling = 4
     mask_config = 1.
 
     # Optim Parameters
-    lr = 1e-3
+    lr = 5e-4
 
     full_dim = 1 * 28 * 28
     mid_dim = 1000
-    hidden = 10
+    hidden = 5
 
     model = NICE(num_coupling=coupling,
                  in_out_dim=full_dim,
@@ -67,7 +69,7 @@ def main():
             model.train()
             optimizer.zero_grad()
             inputs = data[0]
-            # loss = -model.nodes['x'].log_prob(inputs).mean()
+
             loss = -model(inputs).mean()
             loss.backward()
             optimizer.step()
@@ -78,12 +80,12 @@ def main():
 
     model.eval()
     with torch.no_grad():
-        samples = model.nodes['x'].dist.sample(shape=[sample_size, full_dim])
+        samples = model.sample(sample_size)
         samples = torch.reshape(samples, shape=[-1, 28 * 28])
         print(samples.shape)
         path = os.path.join(os.getcwd(), 'results', 'NICE')
         check_dir(path)
-        save_img(samples.detach().cpu().numpy(), os.path.join(path, 'sample-NICE.png'))
+        save_img(samples.detach().cpu().numpy(), os.path.join(path, 'sample-NICE2.png'))
 
 if __name__ == '__main__':
     main()

@@ -8,14 +8,7 @@ import torch.nn as nn
 """
 class Coupling(nn.Module):
     def __init__(self, in_out_dim, mid_dim, hidden, mask_config):
-        """Initialize a coupling layer.
 
-        Args:
-            in_out_dim: input/output dimensions.
-            mid_dim: number of units in a hidden layer.
-            hidden: number of hidden layers.
-            mask_config: 1 if transform odd units, 0 if transform even units.
-        """
         super(Coupling, self).__init__()
         self.mask_config = mask_config
 
@@ -29,14 +22,7 @@ class Coupling(nn.Module):
         self.out_block = nn.Linear(mid_dim, in_out_dim//2)
 
     def forward(self, x, reverse=False):
-        """Forward pass.
 
-        Args:
-            x: input tensor.
-            reverse: True in inference mode, False in sampling mode.
-        Returns:
-            transformed tensor.
-        """
         [B, W] = list(x.size())
         x = x.reshape((B, W//2, 2))
         if self.mask_config:
@@ -73,14 +59,7 @@ class Scaling(nn.Module):
             torch.zeros((1, dim)), requires_grad=True)
 
     def forward(self, x, reverse=False):
-        """Forward pass.
 
-        Args:
-            x: input tensor.
-            reverse: True in inference mode, False in sampling mode.
-        Returns:
-            transformed tensor and log-determinant of Jacobian.
-        """
         log_det_J = torch.sum(self.scale)
         if reverse:
             x = x * torch.exp(-self.scale)
@@ -93,16 +72,7 @@ class Scaling(nn.Module):
 class NICE(nn.Module):
     def __init__(self, prior, coupling, 
         in_out_dim, mid_dim, hidden, mask_config):
-        """Initialize a NICE.
 
-        Args:
-            prior: prior distribution over latent space Z.
-            coupling: number of coupling layers.
-            in_out_dim: input/output dimensions.
-            mid_dim: number of units in a hidden layer.
-            hidden: number of hidden layers.
-            mask_config: 1 if transform odd units, 0 if transform even units.
-        """
         super(NICE, self).__init__()
         self.prior = prior
         self.in_out_dim = in_out_dim

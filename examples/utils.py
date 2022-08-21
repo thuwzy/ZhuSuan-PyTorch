@@ -121,11 +121,12 @@ def save_img(data, name):
     for i in range(num):
         j = i/8
         img_data = data[i]
-        img_data  = np.resize(img_data, (size, size))
+        img_data = np.resize(img_data, (size, size))
         img_data = img_data * 255
+        img_data = np.clip(img_data, 0, 255)
         img_data = img_data.astype(np.uint8)
         im = Image.fromarray(img_data, 'L')
-        imgs.paste(im, (int(j) * size , (i % 8) * size))
+        imgs.paste(im, (int(j) * size, (i % 8) * size))
     imgs.save(name)
 
 def save_image(var, filename, nrow=8, padding=2, pad_value=0):

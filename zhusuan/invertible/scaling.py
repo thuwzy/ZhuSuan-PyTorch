@@ -13,14 +13,14 @@ __all__ = [
 class Scaling(RevNet):
     def __init__(self, dim):
         super(Scaling, self).__init__()
-        self.log_scale = nn.Parameter(torch.zeros([1, dim]))
+        self.log_scale = nn.Parameter(torch.zeros([1, dim]), requires_grad=True)
 
     def _forward(self, x, **kwargs):
-        log_det_J = self.log_scale.clone()
+        log_det_J = torch.sum(self.log_scale)
         x *= self.log_scale.exp()
         return x, log_det_J
 
     def _inverse(self, y, **kwargs):
-        log_det_J = self.log_scale.clone()
+        log_det_J = torch.sum(self.log_scale)
         y *= torch.exp(-self.log_scale)
         return y, log_det_J
