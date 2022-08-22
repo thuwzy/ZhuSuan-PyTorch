@@ -32,13 +32,13 @@ class NICE(BayesianNet):
         self.sn(flow_dis, name="x", n_samples=-1)
 
     def sample(self, size):
-        z = self.prior.sample((size, self.in_out_dim))
-        return z
-        # return self.nodes["x"].dist.sample(shape=[size, self.in_out_dim])
+        # z = self.prior.sample((size, self.in_out_dim))
+        # return z
+        return self.nodes["x"].dist.sample(shape=[size, self.in_out_dim])
 
     def forward(self, x):
         z, log_det_J = self.flow.forward(x, reverse=False)
-        log_ll = torch.sum(self.nodes["prior_x"].dist.log_prob(z[0]), dim=1)
+        log_ll = torch.sum(self.nodes["prior_x"].dist.log_prob(z), dim=1)
         return log_ll + log_det_J
 
 
@@ -82,7 +82,6 @@ def main():
     with torch.no_grad():
         samples = model.sample(sample_size)
         samples = torch.reshape(samples, shape=[-1, 28 * 28])
-        print(samples.shape)
         path = os.path.join(os.getcwd(), 'results', 'NICE')
         check_dir(path)
         save_img(samples.detach().cpu().numpy(), os.path.join(path, 'sample-NICE2.png'))

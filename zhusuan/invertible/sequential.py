@@ -7,8 +7,12 @@ from zhusuan.invertible.base import RevNet
 
 class RevSequential(RevNet):
     """
-    the RevSequential provide a invertible transform which contain a couple of instance of RevNet
-    if there is any  
+    the RevSequential provide a invertible transform which contain a list of instance of RevNet.
+    when forward passing with ``reverse=False``, the input ``x`` goes through every RevNet in the list also with
+    ``reverse=False`` *from begin to end* , when forward passing with ``reverse=True``, input ``x`` goes through
+    every in the list also with ``reverse=True`` *from end to begin*.
+
+    :param layers: a list of RevNet instance.
     """
     def __init__(self, layers):
         super(RevSequential, self).__init__()

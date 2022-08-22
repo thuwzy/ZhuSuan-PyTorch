@@ -9,7 +9,8 @@ __all__ = [
 
 class RevNet(nn.Module):
     """
-    A abc of reversible network
+    An abc of reversible network，every subclass should implement both ``_forward`` and ``_inverse`` abstract method.
+
     """
     def _forward(self, *inputs, **kwargs):
         raise NotImplementedError()
@@ -18,6 +19,10 @@ class RevNet(nn.Module):
         raise NotImplementedError()
 
     def forward(self, *inputs, reverse=False, **kwargs):
+        """
+        when using ``model.forward(x, reverse=False)`` process going with ``_forward(x)``,
+        when using ``model.forward(x, reverse=True)`` process going with ``_inverse(x)``.
+        """
         if not reverse:
             return self._forward(*inputs, **kwargs)
         else:
