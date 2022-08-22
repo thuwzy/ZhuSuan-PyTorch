@@ -6,6 +6,10 @@ from zhusuan.invertible.base import RevNet
 
 
 class RevSequential(RevNet):
+    """
+    the RevSequential provide a invertible transform which contain a couple of instance of RevNet
+    if there is any  
+    """
     def __init__(self, layers):
         super(RevSequential, self).__init__()
         for flow in layers:
