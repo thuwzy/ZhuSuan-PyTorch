@@ -12,34 +12,20 @@ class RevSequential(RevNet):
             assert isinstance(flow, RevNet)
         self.layers = torch.nn.ModuleList(layers)
 
-    def _forward(self, *inputs, **kwargs):
+    def _forward(self, x, **kwargs):
         logdet_items = []
-        x = None
         for flow in self.layers:
-            x = flow(*inputs, reverse=False, **kwargs)
-            assert isinstance(x, tuple)
-            assert len(x) >= 2
-            if x[-1] is not None:
-                logdet_items.append(x[-1])
-            if isinstance(x[0], tuple):
-                x = x[0]
-            else:
-                x = x[:len(x) - 1]
-            assert isinstance(x, tuple)
+            x, log_det = flow(x, reverse=False, **kwargs)
+            if log_det is not None:
+                logdet_items.append(log_det)
 
         return x, sum(logdet_items) if logdet_items else torch.zeros([])
 
-    def _inverse(self, *y, **kwargs):
+    def _inverse(self, y, **kwargs):
         logdet_item = []
         for flow in reversed(self.layers):
-            y = flow(*y, reverse=True, **kwargs)
-            assert isinstance(y, tuple)
-            assert len(y) >= 2
-            if y[-1] is not None:
-                logdet_item.append(y[-1])
-            if isinstance(y[0], tuple):
-                y = y[0]
-            else:
-                y = y[:len(y) - 1]
-            assert isinstance(y, tuple)
+            y, log_det = flow(y, reverse=True, **kwargs)
+            if log_det is not None:
+                logdet_item.append(log_det)
+
         return y, sum(logdet_item) if logdet_item else torch.zeros([])

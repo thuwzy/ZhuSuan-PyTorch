@@ -19,16 +19,18 @@ class NICE(BayesianNet):
         masks = get_coupling_mask(in_out_dim, 1, num_coupling)
         flow_layers = []
         for i in range(num_coupling):
-            flow_layers.append(Coupling(
+            flow_layers.append(AdditiveCoupling(
                 in_out_dim=in_out_dim,
                 mid_dim=mid_dim,
                 hidden=hidden,
-                mask_config=(1.+i) % 2
+                mask=masks[i]
             ))
 
         self.coupling = nn.ModuleList(flow_layers)
         self.scaling = Scaling(in_out_dim)
-        # self.flow = RevSequential(flow_layers)
+        self.flow = RevSequential(flow_layers)
+
+
         # dis = Logistic(loc=[0.], scale=[1.])
         # self.sn(dis, name="prior_x")
         # flow_dis = FlowDistribution(latents=self.nodes["prior_x"].dist, transformation=self.flow)
@@ -38,14 +40,16 @@ class NICE(BayesianNet):
 
     def g(self, z):
         x, _ = self.scaling(z, reverse=True)
-        for i in reversed(range(len(self.coupling))):
-            x = self.coupling[i](x, reverse=True)[0]
+        x, _ = self.flow.forward(z, reverse=True)
+        # for i in reversed(range(len(self.coupling))):
+        #     x = self.coupling[i](x, reverse=True)[0]
         return x
 
 
     def f(self, x):
-        for i in range(len(self.coupling)):
-            x = self.coupling[i](x)[0]
+        # for i in range(len(self.coupling)):
+        #     x = self.coupling[i](x)[0]
+        x, det = self.flow(x)
         return self.scaling(x)
 
     def sample(self, size):
