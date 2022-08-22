@@ -68,6 +68,7 @@ If no error occurs, you've successfully installed ZhuSuan.
    api/zhusuan.framework
    api/zhusuan.variational
    api/zhusuan.mcmc
+   api/zhusuan.invertible
 
 .. toctree::
    :maxdepth: 1

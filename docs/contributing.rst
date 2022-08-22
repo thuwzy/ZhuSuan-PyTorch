@@ -10,6 +10,7 @@ here. Below are an incomplete list of our contributors (find more on
 ZhuSuan-PyTorch
 
 * Zhengyi Wang (`thuwzy <https://github.com/thuwzy>`_)
+* ChenDong Xiang (`Xiang-cd <https://github.com/Xiang-cd>`_)
 
 ZhuSuan on other platforms
 

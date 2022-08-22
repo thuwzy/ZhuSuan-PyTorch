@@ -17,6 +17,7 @@ Submodules
    zhusuan.distributions.bernoulli
    zhusuan.distributions.beta
    zhusuan.distributions.exponential
+   zhusuan.distributions.flow_distribution
    zhusuan.distributions.gamma
    zhusuan.distributions.laplace
    zhusuan.distributions.logistic
