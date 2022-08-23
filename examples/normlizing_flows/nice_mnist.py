@@ -1,10 +1,7 @@
 import torch
-import torch.nn as nn
-
-import math, os, sys
-
-sys.path.append("..")
+import os, sys
 import numpy as np
+sys.path.append("..")
 from zhusuan.framework.bn import BayesianNet
 from zhusuan.distributions import Logistic, FlowDistribution
 from zhusuan.invertible import get_coupling_mask, AdditiveCoupling, Scaling, RevSequential
@@ -26,20 +23,16 @@ class NICE(BayesianNet):
             ))
         flow_layers.append(Scaling(in_out_dim))
         self.flow = RevSequential(flow_layers)
-        dis = Logistic(loc=[0.], scale=[1.])
-        self.sn(dis, name="prior_x")
-        flow_dis = FlowDistribution(latents=self.nodes["prior_x"].dist, transformation=self.flow)
+        dis = Logistic(loc=torch.zeros([in_out_dim]), scale=torch.ones([in_out_dim]))
+        flow_dis = FlowDistribution(latents=dis, transformation=self.flow)
+        # do not sample at init using n_samples=-1 for FlowDistribution
         self.sn(flow_dis, name="x", n_samples=-1)
 
     def sample(self, size):
-        # z = self.prior.sample((size, self.in_out_dim))
-        # return z
-        return self.nodes["x"].dist.sample(shape=[size, self.in_out_dim])
+        return self.nodes["x"].dist.sample(size)
 
     def forward(self, x):
-        z, log_det_J = self.flow.forward(x, reverse=False)
-        log_ll = torch.sum(self.nodes["prior_x"].dist.log_prob(z), dim=1)
-        return log_ll + log_det_J
+        return self.nodes['x'].log_prob(x)
 
 
 def main():
@@ -47,14 +40,13 @@ def main():
     epoch_size = 14
     sample_size = 64
     coupling = 4
-    mask_config = 1.
-
     # Optim Parameters
-    lr = 5e-4
-
+    lr = 1e-3
     full_dim = 1 * 28 * 28
     mid_dim = 1000
     hidden = 5
+    num_iter = -1
+
 
     model = NICE(num_coupling=coupling,
                  in_out_dim=full_dim,
@@ -62,29 +54,34 @@ def main():
                  hidden=hidden)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, eps=1e-4)
     train_dataloader, test_dataloader = fetch_dataloaders('MNIST', batch_size, logit_transform=False, dequantify=True)
-
     for epoch in range(epoch_size):
         stats = []
         for _, data in enumerate(train_dataloader):
+            num_iter += 1
             model.train()
             optimizer.zero_grad()
             inputs = data[0]
-
             loss = -model(inputs).mean()
             loss.backward()
             optimizer.step()
             stats.append(loss.detach().numpy())
-        print("Epoch:[{}/{}], Log Likelihood: {:.4f}".format(
-            epoch + 1, epoch_size, np.mean(np.array(stats))
+            if num_iter % 1000 == 0:
+                model.eval()
+                with torch.no_grad():
+                    path = os.path.join(os.getcwd(), 'results', 'NICE')
+                    check_dir(path)
+                    samples = model.sample(sample_size).cpu()
+                    save_img(samples.numpy(), os.path.join(path, "nice_sample_iter{}.png".format(num_iter)))
+        print("Epoch:[{}/{}], loss: {:.4f} iter:{}".format(
+            epoch + 1, epoch_size, np.mean(np.array(stats)), num_iter
         ))
 
     model.eval()
     with torch.no_grad():
         samples = model.sample(sample_size)
-        samples = torch.reshape(samples, shape=[-1, 28 * 28])
         path = os.path.join(os.getcwd(), 'results', 'NICE')
         check_dir(path)
-        save_img(samples.detach().cpu().numpy(), os.path.join(path, 'sample-NICE2.png'))
+        save_img(samples.detach().cpu().numpy(), os.path.join(path, 'sample-NICE.png'))
 
 if __name__ == '__main__':
     main()

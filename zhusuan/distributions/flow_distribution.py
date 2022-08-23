@@ -1,6 +1,6 @@
 import torch
 
-from .base import Distribution
+from zhusuan.distributions import Distribution
 
 __all__ = [
     "FlowDistribution",
@@ -24,17 +24,15 @@ class FlowDistribution(Distribution):
             **kwargs
         )
 
-    def _sample(self, n_samples=-1, shape=None, **kwargs):
-        if shape is not None:
-            z = self._latents.sample(shape=shape)
-        elif n_samples != -1:
+    def _sample(self, n_samples=-1, **kwargs):
+        if n_samples != -1:
             z = self._latents.sample(n_samples)
         else:
             z = 0.
-        x, _ = self._transformation.forward(z, reverse=True, shape=shape, **kwargs)
-        return x[0]
+        x, _ = self._transformation.forward(z, reverse=True, **kwargs)
+        return x
 
     def log_prob(self, *given, **kwargs):
         z, log_det_J = self._transformation.forward(*given, **kwargs, reverse=False)
-        log_ll = torch.sum(self._latents.log_prob(z[0]) + log_det_J, dim=1)
-        return log_ll
+        log_ll = torch.sum(self._latents.log_prob(z), dim=1)
+        return log_ll + log_det_J
