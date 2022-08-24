@@ -10,6 +10,8 @@ __all__ = [
 class RevNet(nn.Module):
     """
     An abc of reversible network，every subclass should implement both ``_forward`` and ``_inverse`` abstract method.
+    return value of ``_forward`` and ``_inverse`` is like ``(y, log_det_J)``, in which ``y`` is the transformed tensor
+    and `log_det_J`` is log-determinant of Jacobian.
 
     """
     def _forward(self, *inputs, **kwargs):

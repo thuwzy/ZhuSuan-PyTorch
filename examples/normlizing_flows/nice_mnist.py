@@ -4,7 +4,7 @@ import numpy as np
 sys.path.append("..")
 from zhusuan.framework.bn import BayesianNet
 from zhusuan.distributions import Logistic, FlowDistribution
-from zhusuan.invertible import get_coupling_mask, AdditiveCoupling, Scaling, RevSequential
+from zhusuan.invertible import get_coupling_mask, MaskCoupling, Scaling, RevSequential
 from examples.utils import fetch_dataloaders, save_img, check_dir
 
 
@@ -15,7 +15,7 @@ class NICE(BayesianNet):
         masks = get_coupling_mask(in_out_dim, 1, num_coupling)
         flow_layers = []
         for i in range(num_coupling):
-            flow_layers.append(AdditiveCoupling(
+            flow_layers.append(MaskCoupling(
                 in_out_dim=in_out_dim,
                 mid_dim=mid_dim,
                 hidden=hidden,
