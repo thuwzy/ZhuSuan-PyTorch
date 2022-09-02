@@ -94,7 +94,6 @@ class HMC(nn.Module):
                     len_q = len(log_prob_q0.shape)
                     len_p = len(p0[k].shape)
                     assert (len_p >= len_q)
-                    if len_p >
 
 
     def sample(self, bn, observed, initial_position=None):
