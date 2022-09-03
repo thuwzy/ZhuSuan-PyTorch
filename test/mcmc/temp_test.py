@@ -1,6 +1,3 @@
-# !/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
@@ -8,12 +5,9 @@ from __future__ import division
 import torch
 from scipy import stats
 import numpy as np
-import six
-
 from zhusuan import mcmc
 from zhusuan.framework import BayesianNet
 
-import unittest
 
 
 class TestNode:
@@ -32,9 +26,12 @@ class Test_Model(BayesianNet):
 
     def _log_joint(self, use_cache=False):
         x = self.observed['x']
+        # x.requires_grad = True  # !check
         lh_noise = torch.normal(mean=0., std=2., size=x.shape)
         res = 2 * torch.pow(x, 2) - torch.pow(x, 4) + lh_noise
         return res.sum()
+
+
 
 
 def sample_error_with(sampler, n_chains=1, n_iters=80000, thinning=50, burinin=None, dtype=torch.float32,
@@ -64,44 +61,8 @@ def sample_error_with(sampler, n_chains=1, n_iters=80000, thinning=50, burinin=N
     return np.abs(est_pdfs - pdfs).mean()
 
 
-# class TestMCMC(unittest.TestCase):
-#     def test_hmc(self):
-#         sampler = mcmc.HMC(step_size=0.01, n_leapfrogs=10)
-#         e = sample_error_with(sampler, n_chains=100, n_iters=1000)
-#         print(e)
-
-
-class TestSGMCMC(unittest.TestCase):
-    def test_sgld(self):
-        sampler = mcmc.SGLD(learning_rate=0.01)
-        e = sample_error_with(sampler, n_chains=100, n_iters=8000, sampler_type='sgld')
-        print("the result is :", e)
-        assert(e < 0.023)
-
-    def test_psgld(self):
-        sampler = mcmc.PSGLD(learning_rate=0.01)
-        e = sample_error_with(sampler, n_chains=100, n_iters=8000, sampler_type='sgld')
-        print(e)
-        assert (e < 0.088) # biased estimation
-
-    def test_hmc(self):
-        sampler = mcmc.HMC(step_size=0.01, n_leapfrogs=10)
-        e = sample_error_with(sampler, n_chains=100, n_iters=8000)
-        print(e)
-        assert (e < 0.008)
-
-    def test_sghmc(self):
-        sampler = mcmc.SGHMC(learning_rate=0.01, n_iter_resample_v=50,
-                             friction=0.3, variance_estimate=0.02,
-                             second_order=False)
-        e = sample_error_with(sampler, n_chains=100, n_iters=8000, sampler_type='sgld')
-        print(e)
-        assert(e < 0.016)
-
-    def test_sghmc_second_order(self):
-        sampler = mcmc.SGHMC(learning_rate=0.01, n_iter_resample_v=50,
-                             friction=0.3, variance_estimate=0.02,
-                             second_order=True)
-        e = sample_error_with(sampler, n_chains=100, n_iters=8000, sampler_type='sgld')
-        print(e)
-        assert (e < 0.016)
+if __name__ == '__main__':
+    sampler = mcmc.HMC(step_size=0.01, n_leapfrogs=20)
+    e = sample_error_with(sampler, n_chains=100, n_iters=8000)
+    print(e)
+    assert (e < 0.008)

@@ -1,3 +1,6 @@
+import warnings
+
+import IPython
 import torch
 import torch.nn as nn
 from torch import Tensor
@@ -45,7 +48,7 @@ def leapfrog_integrator(q, p, step_size1, step_size2, grad, mass):
 def get_acceptance_rate(q, p, new_q, new_p, log_posterior, mass, data_axes):
     old_H, old_log_prob = hamiltonian(q, p, log_posterior, mass, data_axes)
     new_H, new_log_prob = hamiltonian(new_q, new_p, log_posterior, mass, data_axes)
-    if torch.isfinite(old_log_prob).any():
+    if not torch.isfinite(old_log_prob).any():
         raise ValueError('HMC: old_log_prob has numeric errors! Try better initialization.')
 
     acceptance_rate = torch.exp(torch.minimum(old_H - new_H, torch.zeros([])))
@@ -237,8 +240,8 @@ class HMC:
         else:
             mass_collect_iters = 0
             self.adapt_mass = None
-        self.mass_collect_iters = torch.as_tensor(mass_collect_iters, torch.int32)
-        self.mass_decay = torch.as_tensor(mass_decay, dtype)
+        self.mass_collect_iters = torch.as_tensor(mass_collect_iters, dtype=torch.int32)
+        self.mass_decay = torch.as_tensor(mass_decay, dtype=dtype)
 
     def _adapt_mass(self, t: Tensor, num_chain_dims) -> list[Tensor]:
         ewmv = ExponentialWeightedMovingVariance(
@@ -295,22 +298,22 @@ class HMC:
         return new_step_size_
 
     def _leapfrog(self, q, p, step_size, get_gradient, mass):
-        with torch.no_grad():
-            i = torch.tensor(0, dtype=torch.int32)
-            while i < self.n_leapfrogs + 1:
-                if i > 0:
-                    step_size1 = step_size
-                else:
-                    step_size1 = torch.tensor(0.0, dtype=self.dtype)
+        # with torch.no_grad():
+        i = torch.tensor(0, dtype=torch.int32)
+        while i < self.n_leapfrogs + 1:
+            if i > 0:
+                step_size1 = step_size
+            else:
+                step_size1 = torch.tensor(0.0, dtype=self.dtype)
 
-                if torch.logical_and(torch.less(i, self.n_leapfrogs), torch.less(torch.zeros([]), i)):
-                    step_size2 = step_size
-                else:
-                    step_size2 = step_size / 2
+            if torch.logical_and(torch.less(i, self.n_leapfrogs), torch.less(torch.zeros([]), i)):
+                step_size2 = step_size
+            else:
+                step_size2 = step_size / 2
 
-                q, p = leapfrog_integrator(q, p, step_size1, step_size2,
-                                           lambda q: get_gradient(q), mass)
-                i += 1
+            q, p = leapfrog_integrator(q, p, step_size1, step_size2,
+                                       lambda x: get_gradient(x), mass)
+            i += 1
         return q, p
 
     def _adapt_step_size(self, acceptance_rate, if_initialize_step_size):
@@ -348,12 +351,11 @@ class HMC:
         :return: A :class:`HMCInfo` instance that collects sampling statistics
             during an iteration.
         """
-
-        if callable(meta_bn):
-            # TODO: raise warning
-            self._log_joint = meta_bn
-        else:
+        if isinstance(meta_bn, BayesianNet):
             self._log_joint = lambda obs: meta_bn.forward(obs).log_joint()
+        else:
+            warnings.warn("regard as function")
+            self._log_joint = meta_bn
 
         self.t += 1
         new_t = self.t
@@ -377,18 +379,18 @@ class HMC:
         self.dynamic_shapes = [q.shape for q in self.q]
         self.static_chain_shape = get_log_posterior(self.q).shape
 
-        if not self.static_chain_shape:
-            raise ValueError(
-                "HMC requires that the static shape of the value returned "
-                "by log joint function should be at least partially defined. "
-                "(shape: {})".format(self.static_chain_shape))
+        # if not self.static_chain_shape:
+        #     raise ValueError(
+        #         "HMC requires that the static shape of the value returned "
+        #         "by log joint function should be at least partially defined. "
+        #         "(shape: {})".format(self.static_chain_shape))
 
         self.n_chain_dims = len(self.static_chain_shape)
         self.data_shapes = [
             tuple(torch.cat(
-                (torch.tensor([1] * self.n_chain_dims),
-                 torch.as_tensor(q.shape[self.n_chain_dims:]))
-            )) for q in self.q]
+                (torch.tensor([1] * self.n_chain_dims, dtype=torch.int32),
+                 torch.as_tensor(q.shape[self.n_chain_dims:], dtype=torch.int32))
+            ).tolist()) for q in self.q]
         self.data_axes = [list(range(self.n_chain_dims, len(data_shape)))
                           for data_shape in self.data_shapes]
 
@@ -446,7 +448,7 @@ class HMC:
                 expanded_if_accept, torch.ones_like(nq, dtype=torch.bool))
             new_q.append(torch.where(expanded_if_accept, nq, oq))
 
-        update_q = [old.assign(new) for old, new in zip(latent_v, new_q)]
+        update_q = [new for old, new in zip(latent_v, new_q)]
         new_log_prob = torch.where(if_accept, new_log_prob, old_log_prob)
 
         # Adapt step size
@@ -467,5 +469,4 @@ class HMC:
             orig_log_prob=old_log_prob,
             log_prob=new_log_prob,
         )
-
-        return update_q, hmc_info
+        return dict(zip(latent_k, update_q)), hmc_info
