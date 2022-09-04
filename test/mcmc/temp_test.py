@@ -32,8 +32,6 @@ class Test_Model(BayesianNet):
         return res.sum()
 
 
-
-
 def sample_error_with(sampler, n_chains=1, n_iters=80000, thinning=50, burinin=None, dtype=torch.float32,
                       sampler_type='hmc'):
     if burinin is None:
@@ -46,7 +44,8 @@ def sample_error_with(sampler, n_chains=1, n_iters=80000, thinning=50, burinin=N
             resample = True if t == 0 else False
             x_sample = sampler.sample(model, {}, resample)['x'].detach().numpy()
         else:
-            x_sample = sampler.sample(model, {}, {'x': x})[0]['x'].detach().numpy()
+            sample, info = sampler.sample(model, {}, {'x': x})
+            x_sample = sample['x'].detach().numpy()
         if np.isnan(x_sample.sum()):
             raise ValueError("nan encountered")
         if t >= burinin and t % thinning == 0:
@@ -62,7 +61,9 @@ def sample_error_with(sampler, n_chains=1, n_iters=80000, thinning=50, burinin=N
 
 
 if __name__ == '__main__':
-    sampler = mcmc.HMC(step_size=0.01, n_leapfrogs=20)
-    e = sample_error_with(sampler, n_chains=100, n_iters=8000)
-    print(e)
+    t = time.time()
+    sampler = mcmc.HMC(step_size=0.01, n_leapfrogs=10)
+    e = sample_error_with(sampler, n_chains=100, n_iters=1000)
+    t1 = time.time()
+    print(e, t1-t)
     assert (e < 0.008)

@@ -366,15 +366,16 @@ class HMC:
         #     if not isinstance(v, tf.Variable):
         #         raise TypeError("latent['{}'] is not a tensorflow Variable."
         #                         .format(latent_k[i]))
-        self.q = copy(latent_v)
+        self.q = latent_v
 
         def get_log_posterior(var_list):
             joint_obs = {**dict(zip(latent_k, var_list)), **observed}
             return self._log_joint(joint_obs)
 
         def get_gradient(var_list):
-            log_p = get_log_posterior(var_list)
-            return torch.autograd.grad(log_p, var_list)
+            log_p = torch.mean(get_log_posterior(var_list))
+            grad = torch.autograd.grad(log_p, var_list)
+            return grad
 
         self.dynamic_shapes = [q.shape for q in self.q]
         self.static_chain_shape = get_log_posterior(self.q).shape
@@ -402,8 +403,8 @@ class HMC:
             mass = [torch.ones(shape) for shape in self.data_shapes]
 
         p = random_momentum(self.dynamic_shapes, mass)
-        current_p = copy(p)
-        current_q = copy(self.q)
+        current_p = p
+        current_q = self.q
 
         # Initialize step size
         if self.adapt_step_size is None:
