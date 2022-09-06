@@ -2,6 +2,7 @@ import warnings
 
 import IPython
 import torch
+import numpy as np
 import torch.nn as nn
 from torch import Tensor
 from copy import copy
@@ -97,7 +98,7 @@ class ExponentialWeightedMovingVariance:
         self.decay = decay
         self.one = torch.ones([], requires_grad=False, dtype=torch.float32)  # constant in tf
         self.num_chain_dims = num_chain_dims
-        self.chain_axes = torch.arange(self.num_chain_dims)
+        self.chain_axes = list(range(num_chain_dims))
 
     def update(self, x):
         # x: (chain_dims data_dims)
@@ -281,14 +282,13 @@ class HMC:
                 new_step_size = step_size * (1. / factor)
             else:
                 new_step_size = step_size * factor
-
             cond = torch.logical_not(torch.logical_xor(
                 torch.less(last_acceptance_rate, self.target_acceptance_rate),
                 torch.less(acceptance_rate, self.target_acceptance_rate)))
             return [new_step_size, acceptance_rate, cond]
 
         new_step_size_ = self.step_size
-        last_acceptance_rate_ = 1.0
+        last_acceptance_rate_ = torch.tensor(1.0)
         input_cond = torch.tensor(True)
 
         while input_cond:
@@ -366,7 +366,7 @@ class HMC:
         #     if not isinstance(v, tf.Variable):
         #         raise TypeError("latent['{}'] is not a tensorflow Variable."
         #                         .format(latent_k[i]))
-        self.q = latent_v
+        self.q = [v.clone().requires_grad_() for v in latent_v]
 
         def get_log_posterior(var_list):
             joint_obs = {**dict(zip(latent_k, var_list)), **observed}
@@ -378,6 +378,7 @@ class HMC:
             return grad
 
         self.dynamic_shapes = [q.shape for q in self.q]
+        # IPython.embed()
         self.static_chain_shape = get_log_posterior(self.q).shape
 
         # if not self.static_chain_shape:
