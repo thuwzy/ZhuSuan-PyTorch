@@ -41,14 +41,16 @@ class StochasticTensor(object):
                  bn,
                  name: str,
                  dist: Distribution,
-                 observation=None, **kwargs):
+                 observation=None,
+                 n_samples=None,
+                 **kwargs):
         if bn is None:
             pass
         self._bn = bn
         self._name: str = name
         self._dist: Distribution = dist
         self._dtype: torch.dtype = dist.dtype
-        self._n_samples = kwargs.get("n_samples", None)
+        self._n_samples = n_samples
         self._observation = observation
         self._check_observation(observation)
         super(StochasticTensor, self).__init__()
