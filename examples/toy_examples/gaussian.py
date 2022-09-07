@@ -45,13 +45,12 @@ if __name__ == '__main__':
     # Define model parameters
     n_x = 1
     stdev = 1 / (np.arange(n_x, dtype=np.float32) + 1)
-
     # HMC parameters
     kernel_width = 0.1
-    n_chains = 10
+    n_chains = 100
     n_iters = 200
     burnin = n_iters // 2
-    n_leapfrogs = 5
+    n_leapfrogs = 20
 
     # Build the computation graph
     model = Gaussian(n_x, stdev, n_chains)
@@ -68,6 +67,7 @@ if __name__ == '__main__':
                   target_acceptance_rate=0.9)
         sample, hmc_info = hmc.sample(model, {}, {"x": init_x})
         x_sample = hmc_info.samples["x"]
+        print(x_sample)
         acc = hmc_info.acceptance_rate
         ss = hmc_info.updated_step_size
         print('Sample {}: Acceptance rate = {}, updated step size = {}'

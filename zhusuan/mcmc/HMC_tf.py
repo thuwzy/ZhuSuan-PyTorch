@@ -39,9 +39,12 @@ def hamiltonian(q, p, log_posterior, mass, data_axes):
     return potential + kinetic, -potential
 
 
-def leapfrog_integrator(q, p, step_size1, step_size2, grad, mass):
-    q = [x + step_size1 * y for x, y in zip(q, velocity(p, mass))]
-    grads = grad(q)
+def leapfrog_integrator(q, p, step_size1, step_size2, grad, mass, src=None):
+    if src == "frog":
+        q = [x + step_size1 * y for x, y in zip(q, velocity(p, mass))]
+    else:
+        q = [x + step_size1 * y for x, y in zip(q, velocity(p, mass))]
+    grads = [g * 1 for g in grad(q, src)]
     p = [x + step_size2 * y for x, y in zip(p, grads)]
     return q, p
 
@@ -272,8 +275,8 @@ class HMC:
 
         def loop_body(step_size, last_acceptance_rate, cond):
             # Calculate acceptance_rate
-            new_q, new_p = leapfrog_integrator(q, p, 0.0, step_size / 2, get_gradient, mass)
-            new_q, new_p = leapfrog_integrator(new_q, new_p, step_size, step_size / 2, get_gradient, mass)
+            new_q, new_p = leapfrog_integrator(q, p, 0.0, step_size / 2, get_gradient, mass, "init step")
+            new_q, new_p = leapfrog_integrator(new_q, new_p, step_size, step_size / 2, get_gradient, mass,"init step")
             acceptance_rate = get_acceptance_rate(q, p, new_q, new_p, get_log_posterior, mass, self.data_axes)[-1]
             acceptance_rate = torch.mean(acceptance_rate)
 
@@ -312,7 +315,7 @@ class HMC:
                 step_size2 = step_size / 2
 
             q, p = leapfrog_integrator(q, p, step_size1, step_size2,
-                                       lambda x: get_gradient(x), mass)
+                                       lambda x, y: get_gradient(x, y), mass, "frog")
             i += 1
         return q, p
 
@@ -372,13 +375,14 @@ class HMC:
             joint_obs = {**dict(zip(latent_k, var_list)), **observed}
             return self._log_joint(joint_obs)
 
-        def get_gradient(var_list):
+        def get_gradient(var_list, source=None):
             log_p = torch.mean(get_log_posterior(var_list))
             grad = torch.autograd.grad(log_p, var_list)
+            if source == "frog":
+                return grad
             return grad
 
         self.dynamic_shapes = [q.shape for q in self.q]
-        # IPython.embed()
         self.static_chain_shape = get_log_posterior(self.q).shape
 
         # if not self.static_chain_shape:
