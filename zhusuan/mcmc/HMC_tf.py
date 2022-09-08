@@ -44,7 +44,7 @@ def leapfrog_integrator(q, p, step_size1, step_size2, grad, mass, src=None):
         q = [x + step_size1 * y for x, y in zip(q, velocity(p, mass))]
     else:
         q = [x + step_size1 * y for x, y in zip(q, velocity(p, mass))]
-    grads = [g * 1 for g in grad(q, src)]
+    grads = grad(q, src)
     p = [x + step_size2 * y for x, y in zip(p, grads)]
     return q, p
 
@@ -128,6 +128,32 @@ class ExponentialWeightedMovingVariance:
 
     def precision(self):
         return self.get_precision(self.var)
+
+
+import matplotlib.pyplot as plt
+import math
+
+
+def Plot(qs):
+    k = -1
+    first_ele = [q[0][k].detach().numpy() for q in qs]
+
+    def normal_distribution(x, mean, sigma):
+        return np.exp(-1 * ((x - mean) ** 2) / (2 * (sigma ** 2))) / (math.sqrt(2 * np.pi) * sigma)
+
+    mean1, sigma1 = 0, 1
+    x1 = np.linspace(mean1 - 6 * sigma1, mean1 + 6 * sigma1, 100)
+    y1 = normal_distribution(x1, mean1, sigma1)
+    i = 0
+    for ele in first_ele:
+        i+=1
+        plt.plot(x1, y1, 'r', label='m=0,sig=1')
+        print(ele, normal_distribution(ele, mean1, sigma1))
+        plt.plot(ele, normal_distribution(ele, mean1, sigma1), marker="o", markersize=8)
+        plt.legend()
+        plt.grid()
+        plt.savefig("/Users/xxy/xcd/工作/科研/2022暑假任务/ZhuSuan-PyTorch/examples/result/%d.png" % i)
+        plt.show()
 
 
 class HMCInfo(object):
@@ -224,7 +250,8 @@ class HMC:
     def __init__(self, step_size=1., n_leapfrogs=10,
                  adapt_step_size=None, target_acceptance_rate=0.8,
                  gamma=0.05, t0=100, kappa=0.75,
-                 adapt_mass=None, mass_collect_iters=10, mass_decay=0.99, dtype=torch.float32):
+                 adapt_mass=None, mass_collect_iters=10, mass_decay=0.99, dtype=torch.float32,
+                 if_plot=False):
         # TODO: Maintain the variables somewhere else to let the sample be
         # called multiple times
         self.step_size = torch.tensor(step_size, requires_grad=False, dtype=dtype)
@@ -233,6 +260,7 @@ class HMC:
         self.t = torch.tensor(0, requires_grad=False, dtype=torch.int32)
         self.adapt_step_size = adapt_step_size
         self.dtype = dtype
+        self.if_plot = if_plot
         if adapt_step_size is not None:
             self.step_size_tuner = StepSizeTuner(
                 step_size, adapt_step_size, gamma, t0, kappa,
@@ -276,7 +304,7 @@ class HMC:
         def loop_body(step_size, last_acceptance_rate, cond):
             # Calculate acceptance_rate
             new_q, new_p = leapfrog_integrator(q, p, 0.0, step_size / 2, get_gradient, mass, "init step")
-            new_q, new_p = leapfrog_integrator(new_q, new_p, step_size, step_size / 2, get_gradient, mass,"init step")
+            new_q, new_p = leapfrog_integrator(new_q, new_p, step_size, step_size / 2, get_gradient, mass, "init step")
             acceptance_rate = get_acceptance_rate(q, p, new_q, new_p, get_log_posterior, mass, self.data_axes)[-1]
             acceptance_rate = torch.mean(acceptance_rate)
 
@@ -303,6 +331,11 @@ class HMC:
     def _leapfrog(self, q, p, step_size, get_gradient, mass):
         # with torch.no_grad():
         i = torch.tensor(0, dtype=torch.int32)
+        frog_process_p = []
+        frog_process_q = []
+        if self.if_plot:
+            frog_process_p.append(p)
+            frog_process_q.append(q)
         while i < self.n_leapfrogs + 1:
             if i > 0:
                 step_size1 = step_size
@@ -316,7 +349,12 @@ class HMC:
 
             q, p = leapfrog_integrator(q, p, step_size1, step_size2,
                                        lambda x, y: get_gradient(x, y), mass, "frog")
+            if self.if_plot:
+                frog_process_p.append(p)
+                frog_process_q.append(q)
             i += 1
+        if self.if_plot:
+            Plot(frog_process_q)
         return q, p
 
     def _adapt_step_size(self, acceptance_rate, if_initialize_step_size):
@@ -429,7 +467,7 @@ class HMC:
             else:
                 new_step_size = self.step_size
             new_step_size = new_step_size.detach()
-
+        print("step_size", new_step_size)
         # Leapfrog
         current_q, current_p = self._leapfrog(
             current_q, current_p, new_step_size, get_gradient, mass)

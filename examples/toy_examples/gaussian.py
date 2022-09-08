@@ -23,11 +23,11 @@ class Gaussian(BayesianNet):
         self._n_x = n_x
         self._std = std
         self._n_particles = n_particles
+        self.dist = Normal(torch.zeros([n_x], dtype=torch.float32), std=self._std)
 
     def forward(self, observed):
         self.observe(observed)
-        dist = Normal(torch.zeros([n_x], dtype=torch.float32), std=self._std)
-        self.sn(dist, "x", n_samples=self._n_particles)
+        self.sn(self.dist, "x", n_samples=self._n_particles)
         return self
 
 
@@ -57,14 +57,17 @@ if __name__ == '__main__':
 
     samples = []
     print('Sampling...')
-
     for i in range(n_iters):
+        if_plot = False
+        if i == 199:
+            print(i)
+            if_plot = True
         init_x = torch.zeros([n_chains, n_x], requires_grad=False)
         adapt_step_size: bool = i < burnin // 2
         adapt_mass: bool = i < burnin // 2
         hmc = HMC(step_size=1e-3, n_leapfrogs=n_leapfrogs,
                   adapt_step_size=adapt_step_size, adapt_mass=adapt_mass,
-                  target_acceptance_rate=0.9)
+                  target_acceptance_rate=0.9, if_plot=if_plot)
         sample, hmc_info = hmc.sample(model, {}, {"x": init_x})
         x_sample = hmc_info.samples["x"]
         print(x_sample)
