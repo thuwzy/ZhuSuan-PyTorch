@@ -15,9 +15,10 @@ import torch.nn as nn
 
 sys.path.append("..")
 from zhusuan.framework.bn import BayesianNet
+from zhusuan import distributions
 from zhusuan.variational.importance_weighted_objective import ImportanceWeightedObjective
 from examples.utils import load_mnist_realval, save_img
-
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 hidden_dim = 500
 using_vimco = False
 if using_vimco:
@@ -66,11 +67,10 @@ class Generator(BayesianNet):
                     )
         x_probs = self.gen_sq(z)
         self.cache["x_mean"] = x_probs
-
+        bernoulli = distributions.Bernoulli(probs=x_probs, device=device)
         x_sample = self.sn(
-            'Bernoulli',
+            bernoulli,
             name='x',
-            probs=x_probs,
             reduce_mean_dims=None,
             reduce_sum_dims=[2]
         )
@@ -104,11 +104,10 @@ class Variational(BayesianNet):
         # get samples from StochasticTensor, z is not observed, so self.sn return new samples
         # z.shape [n_samples, batch_shape, z_dim]
         # the z sample will be stored to self._nodes["z"]._dist.sample_cache
-        z = self.sn("Normal",
+        normal = distributions.Normal(z_mean, z_std, device=device,
+                                      is_reparameterized=reparameterization)
+        z = self.sn(normal,
                     name="z",
-                    mean=z_mean,
-                    std=z_std,
-                    is_reparameterized=reparameterization,
                     n_samples=self.n_samples,
                     reduce_mean_dims=None,
                     reduce_sum_dims=[2]
@@ -117,7 +116,6 @@ class Variational(BayesianNet):
 
 
 def main():
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     start = time.time()
     epoch_size = 10
     batch_size = 64
