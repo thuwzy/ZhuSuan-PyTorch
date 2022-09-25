@@ -1,3 +1,11 @@
+"""
+an example of importance weighted variational autoencoder
+there are two estimator of gradient: sgvb and vimco
+sgvb method using the paper from
+sgvb using the reparameterization trick, so the
+
+vimco
+"""
 import math
 import os
 import sys
@@ -11,7 +19,11 @@ from zhusuan.variational.importance_weighted_objective import ImportanceWeighted
 from examples.utils import load_mnist_realval, save_img
 
 hidden_dim = 500
-
+using_vimco = False
+if using_vimco:
+    reparameterization = False
+else:
+    reparameterization = True
 
 class Generator(BayesianNet):
     def __init__(self, x_dim, z_dim, n_samples):
@@ -96,7 +108,7 @@ class Variational(BayesianNet):
                     name="z",
                     mean=z_mean,
                     std=z_std,
-                    is_reparameterized=False,
+                    is_reparameterized=reparameterization,
                     n_samples=self.n_samples,
                     reduce_mean_dims=None,
                     reduce_sum_dims=[2]
@@ -109,17 +121,19 @@ def main():
     start = time.time()
     epoch_size = 10
     batch_size = 64
-
     z_dim = 40
     x_dim = 28 * 28 * 1
 
     lr = 0.001
-
     lb_samples = 40
 
     generator = Generator(x_dim, z_dim, lb_samples)
     variational = Variational(x_dim, z_dim, lb_samples)
-    model = ImportanceWeightedObjective(generator, variational, axis=0, estimator="vimco").to(device)
+
+    if using_vimco:
+        model = ImportanceWeightedObjective(generator, variational, axis=0, estimator="vimco").to(device)
+    else:
+        model = ImportanceWeightedObjective(generator, variational, axis=0, estimator="sgvb").to(device)
 
     optimizer = torch.optim.Adam(model.parameters(), lr)
 
@@ -144,7 +158,6 @@ def main():
             if (step + 1) % 100 == 0:
                 print("Epoch[{}/{}], Step [{}/{}], Loss: {:.4f}".format(epoch + 1, epoch_size, step + 1, num_batches,
                                                                         loss.clone().cpu().detach().numpy()))
-                # float(loss.clone().detach().numpy())))
     end = time.time()
     print("using", end - start, "s")
     batch_x = x_test[0:64]

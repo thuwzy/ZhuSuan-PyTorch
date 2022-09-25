@@ -25,7 +25,7 @@ class NICE(BayesianNet):
         self.flow = RevSequential(flow_layers)
         dis = Logistic(loc=torch.zeros([in_out_dim]), scale=torch.ones([in_out_dim]))
         flow_dis = FlowDistribution(latents=dis, transformation=self.flow)
-        # do not sample at init using n_samples=-1 for FlowDistribution
+        # do not sample at init using n_samples=-1 for FlowDistribution, only FlowDistribution has this property
         self.sn(flow_dis, name="x", n_samples=-1)
 
     def sample(self, size):
