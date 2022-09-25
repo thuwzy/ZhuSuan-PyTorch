@@ -20,7 +20,7 @@ from zhusuan.variational.importance_weighted_objective import ImportanceWeighted
 from examples.utils import load_mnist_realval, save_img
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 hidden_dim = 500
-using_vimco = False
+using_vimco = True
 if using_vimco:
     reparameterization = False
 else:

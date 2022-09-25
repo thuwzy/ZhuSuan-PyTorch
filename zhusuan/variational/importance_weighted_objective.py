@@ -44,10 +44,10 @@ class ImportanceWeightedObjective(nn.Module):
     def log_joint(self, nodes):
         log_joint_ = None
         for n_name in nodes.keys():
-            adder = nodes[n_name].log_prob()
-            if log_joint_ is None:
-                log_joint_ = torch.zeros(adder.shape)
-            log_joint_ += adder
+            try:
+                log_joint_ += nodes[n_name].log_prob()
+            except:
+                log_joint_ = nodes[n_name].log_prob()
 
             # warnings.warn(f"exception getted in log_joint method, using current node {n_name}")
             # log_joint_ = nodes[n_name].log_prob()
