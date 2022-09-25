@@ -47,7 +47,7 @@ if __name__ == '__main__':
     stdev = 1 / (np.arange(n_x, dtype=np.float32) + 1)
     # HMC parameters
     kernel_width = 0.1
-    n_chains = 100
+    n_chains = 1
     n_iters = 200
     burnin = n_iters // 2
     n_leapfrogs = 20
@@ -59,9 +59,9 @@ if __name__ == '__main__':
     print('Sampling...')
     for i in range(n_iters):
         if_plot = False
-        if i == 199:
+        if i == 7:
             print(i)
-            if_plot = True
+            # if_plot = True
         init_x = torch.zeros([n_chains, n_x], requires_grad=False)
         adapt_step_size: bool = i < burnin // 2
         adapt_mass: bool = i < burnin // 2

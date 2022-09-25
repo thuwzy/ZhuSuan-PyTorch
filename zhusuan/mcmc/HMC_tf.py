@@ -414,7 +414,7 @@ class HMC:
             return self._log_joint(joint_obs)
 
         def get_gradient(var_list, source=None):
-            log_p = torch.mean(get_log_posterior(var_list))
+            log_p = torch.sum(get_log_posterior(var_list))
             grad = torch.autograd.grad(log_p, var_list)
             if source == "frog":
                 return grad
