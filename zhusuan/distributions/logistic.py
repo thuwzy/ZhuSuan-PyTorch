@@ -58,7 +58,7 @@ class Logistic(Distribution):
             _scale = self._scale
 
         uniform = torch.nn.init.uniform_(torch.empty(_shape, dtype=self._dtype), 0., 1.)  # !check efficiency
-        epsilon = torch.log(uniform) - torch.log(1 - uniform)
+        epsilon = (torch.log(uniform) - torch.log(1 - uniform)).to(self._device)
         _sample = _loc + _scale * epsilon
         self.sample_cache = _sample
         return _sample

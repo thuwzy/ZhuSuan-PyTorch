@@ -8,7 +8,7 @@ __all__ = [
 
 
 class FlowDistribution(Distribution):
-    def __init__(self, latents=None, transformation=None, flow_kwargs=None, dtype=torch.float32, group_ndims=0,
+    def __init__(self, latents, transformation, flow_kwargs=None, dtype=torch.float32, group_ndims=0,
                  device=torch.device('cpu'),
                  **kwargs):
         self._latents = latents
@@ -27,8 +27,8 @@ class FlowDistribution(Distribution):
     def _sample(self, n_samples=-1, **kwargs):
         if n_samples != -1:
             z = self._latents.sample(n_samples)
-        else:
-            z = 0.
+        else: # if n_samples == -1, then return None as no sample
+            return None
         x, _ = self._transformation.forward(z, reverse=True, **kwargs)
         return x
 
