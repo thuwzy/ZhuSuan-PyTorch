@@ -17,6 +17,7 @@ def compute_iw_term(x, axis):
     """
     compute the importance weighted gradient estimation using Numerically stable method
     param x: log(w) term
+    param axis: the samples axis the importance term that will be computed
     """
     x_max = torch.max(x, axis, keepdim=True).values
     w: torch.Tensor = (x - x_max).exp()
@@ -25,6 +26,26 @@ def compute_iw_term(x, axis):
 
 
 class ImportanceWeightedObjective(nn.Module):
+    """
+    The class that represents the importance weighted objective for
+    variational inference (Burda, 2015)
+
+    As a variational objective, :class:`ImportanceWeightedObjective` provides two
+    gradient estimators for the variational (proposal) parameters:
+
+    * :meth:`sgvb`: The Stochastic Gradient Variational Bayes (SGVB) estimator,
+      also known as "the reparameterization trick", or "path derivative
+      estimator".
+    * :meth:`vimco`: The multi-sample score function estimator with variance
+      reduction, also known as "VIMCO".
+
+    :param generator: generator part of importance weighted objective
+    :param variational: variational part of importance weighted objective
+    :param axis: The sample dimension(s) to reduce when computing the
+        outer expectation in the objective.
+    :param estimator: the estimator, a str in either 'sgvb' or 'vimco'
+
+    """
     def __init__(self, generator, variational, axis=None, estimator='sgvb'):
         super().__init__()
         self.generator = generator
@@ -107,6 +128,23 @@ class ImportanceWeightedObjective(nn.Module):
             return - log_w
 
     def vimco(self, logpxz, logqz, reduce_mean=True):
+        """
+        Implements the multi-sample score function gradient estimator for
+        the objective, also known as "VIMCO", which is named
+        by authors of the original paper (Minh, 2016).
+
+        It works for all kinds of latent `StochasticTensor` s.
+
+        .. note::
+
+            To use the :meth:`vimco` estimator, the ``is_reparameterized``
+            property of each reparameterizable latent `StochasticTensor` must
+            be set False.
+
+        :return: A Tensor. The surrogate cost for Tensorflow optimizers to
+            minimize.
+        """
+
         log_w = logpxz - logqz
         # check size along the sample axis
         err_msg = "VIMCO is a multi-sample gradient estimator, size along " \

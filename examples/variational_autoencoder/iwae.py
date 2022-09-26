@@ -2,9 +2,12 @@
 an example of importance weighted variational autoencoder
 there are two estimator of gradient: sgvb and vimco
 sgvb method using the paper from
-sgvb using the reparameterization trick, so the
+sgvb using the reparameterization trick, so is_reparameterized
+must be True
 
-vimco
+vimco method using the paper from (Minh, 2016).
+vimco directly estimate the gradient of latent, so is_reparameterized
+must be False
 """
 import math
 import os
