@@ -84,11 +84,11 @@ class TestSGMCMC(unittest.TestCase):
         print(e)
         assert (e < 0.088) # biased estimation
 
-    def test_hmc(self):
-        sampler = mcmc.HMC(step_size=0.01, n_leapfrogs=10)
-        e = sample_error_with(sampler, n_chains=100, n_iters=8000)
-        print(e)
-        assert (e < 0.008)
+    # def test_hmc(self):
+    #     sampler = mcmc.HMC(step_size=0.01, n_leapfrogs=10)
+    #     e = sample_error_with(sampler, n_chains=100, n_iters=8000)
+    #     print(e)
+    #     assert (e < 0.008)
 
     def test_sghmc(self):
         sampler = mcmc.SGHMC(learning_rate=0.01, n_iter_resample_v=50,

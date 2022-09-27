@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from zhusuan.framework.bn import BayesianNet
 from zhusuan.distributions import Normal, Bernoulli
 from zhusuan.variational.elbo import ELBO
-from zhusuan.invertible import MaskCoupling, get_coupling_mask, Scaling, RevSequential
+from zhusuan.invertible import MaskCoupling, get_coupling_mask, Scaling, RevSequential, RevNet
 from examples.utils import load_mnist_realval, save_img
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -23,7 +23,8 @@ class Generator(BayesianNet):
             nn.ReLU(),
             nn.Linear(500, 500),
             nn.ReLU(),
-            nn.Linear(500, x_dim)
+            nn.Linear(500, x_dim),
+            nn.Sigmoid()
         )
 
     def forward(self, observed):
@@ -36,11 +37,11 @@ class Generator(BayesianNet):
 
         prior = Normal(mean=torch.zeros([batch_len, self.z_dim]),
                        std=torch.ones([batch_len, self.z_dim]), dtype=torch.float32)
-        z = self.sn(prior, "z")
+        z = self.sn(prior, "z", reduce_mean_dims=[0], reduce_sum_dims=[1])
         # print(z.shape)
 
         x_probs = self.gen(z)
-        self.cache['x_mean'] = F.sigmoid(x_probs)
+        self.cache['x_mean'] = x_probs
 
         dis = Bernoulli(probs=x_probs)
         sample_x = self.sn(dis, "x",
@@ -82,6 +83,7 @@ class Variational(BayesianNet):
         z = self.sn(normal, "z",
                     reduce_mean_dims=[0],
                     reduce_sum_dims=[1])
+        assert (z.shape[1] == self.z_dim)
         return self
 
 
@@ -99,12 +101,12 @@ class NICEFlow(nn.Module):
         self.flow = RevSequential(flows)
 
     def forward(self, z, **kwargs):
-        out, log_det_J = self.flow.forward(z, **kwargs)
+        out, log_det_J = self.flow.forward(z[0], **kwargs)
         res = {"z": out}
         return res, log_det_J
 
 
-class HF(nn.Module):
+class HF(RevNet):
     def __init__(self, z_dim, is_first=False, v_dim=None):
         super(HF, self).__init__()
         if is_first:
@@ -112,7 +114,9 @@ class HF(nn.Module):
         else:
             self.v_layer = nn.Linear(z_dim, z_dim)
 
-    def forward(self, z, v, **kwargs):
+    def _forward(self, inputs, **kwargs):
+        z = inputs[0]
+        v = inputs[1]
         v_new = self.v_layer(v)
         vvT = torch.bmm(v_new.unsqueeze(2), v_new.unsqueeze(1))
         vvTz = torch.bmm(vvT, z.unsqueeze(2)).squeeze(2)
@@ -122,14 +126,15 @@ class HF(nn.Module):
         return (z_new, v_new), torch.zeros([1, 1])
 
 
-class HouseHolderFlow(nn.Module):
+class HouseHolderFlow(RevNet):
     def __init__(self, z_dim, v_dim, n_flows):
         super(HouseHolderFlow, self).__init__()
         _first_kwarg = {'is_first': True, 'v_dim': v_dim}
-        self.flow = nn.Sequential(*[HF(z_dim, **_first_kwarg) if _ == 0 else HF(z_dim) for _ in range(n_flows)])
 
-    def forward(self, z, v, **kwargs):
-        out, log_det = self.flow.forward(z, v, **kwargs)
+        self.flow = RevSequential([HF(z_dim, **_first_kwarg) if _ == 0 else HF(z_dim) for _ in range(n_flows)])
+
+    def _forward(self, inputs, **kwargs):
+        out, log_det = self.flow.forward(inputs, **kwargs)
         res = {"z": out[0]}
         return res, log_det
     
@@ -137,12 +142,9 @@ class HouseHolderFlow(nn.Module):
 class PF(nn.Module):
     def __init__(self, z_dim):
         super(PF, self).__init__()
-        self.u = self.create_parameter(shape=[1, z_dim])
-        self.w = self.create_parameter(shape=[1, z_dim])
-        self.b = self.create_parameter(shape=[1])
-        self.add_parameter('u', self.u)
-        self.add_parameter('w', self.w)
-        self.add_parameter('b', self.b)
+        self.u = nn.Parameter(torch.zeros([1, z_dim]))
+        self.w = nn.Parameter(torch.zeros([1, z_dim]))
+        self.b = nn.Parameter(torch.zeros([1]))
 
     def forward(self, z, **kwargs):
         def m(z):
@@ -160,7 +162,7 @@ class PF(nn.Module):
         z_new = z + u * h(activation)
         psi = h_prime(activation) * self.w
         log_det = torch.log(torch.abs(1. + torch.sum(u * psi, dim=1, keepdim=True)))
-        return (z_new,), log_det
+        return z_new, log_det
 
 
 class PlanarFlow(nn.Module):
@@ -169,7 +171,7 @@ class PlanarFlow(nn.Module):
         self.flows = nn.Sequential(*[PF(z_dim) for _ in range(n_flows)])
 
     def forward(self, z, **kwargs):
-        out, log_det = self.flows.forward(z, **kwargs)
+        out, log_det = self.flows(z[0])
         res = {'z': out[0]}
         return res, log_det
 
@@ -192,17 +194,14 @@ def main():
     # create the network
     generator = Generator(x_dim, z_dim, batch_size)
     variational = Variational(x_dim, z_dim, batch_size)
-    nice_flow = NICEFlow(z_dim, mid_dim_flow, num_coupling, num_hidden_per_coupling)
-    model = ELBO(generator, variational, transform=nice_flow, transform_var=['z'])
+    # nice_flow = NICEFlow(z_dim, mid_dim_flow, num_coupling, num_hidden_per_coupling)
+    # model = ELBO(generator, variational, transform=nice_flow, transform_var=['z'])
     # planar_flow = PlanarFlow(z_dim, 1)
     # model = ELBO(generator, variational, transform=planar_flow, transform_var=['z'])
-    # householder_flow = HouseHolderFlow(z_dim, 500, 5)
-    # model = ELBO(generator, variational, transform=householder_flow, transform_var=['z'], auxillary_var=['z_logits'])
-    # model = ELBO(generator, variational)
+    householder_flow = HouseHolderFlow(z_dim, 500, 5)
+    model = ELBO(generator, variational, transform=householder_flow, transform_var=['z'], auxillary_var=['z_logits'])
 
-    clip = fluid.clip.GradientClipByNorm(clip_norm=1.0)
-    optimizer = torch.optimizer.Adam(learning_rate=lr,
-                                      parameters=model.parameters(), )
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
     x_train, t_train, x_valid, t_valid, x_test, t_test = load_mnist_realval()
 
@@ -216,29 +215,26 @@ def main():
             x = torch.reshape(x, [-1, x_dim])
             if x.shape[0] != batch_size:
                 continue
-
             ##loss= model(x)
             loss = model({'x': x})
-            assert (generator.log_joint().shape == [])
-
             loss.backward()
             optimizer.step()
-            optimizer.clear_grad()
+            optimizer.zero_grad()
 
             if (step + 1) % 100 == 0:
                 print("Epoch[{}/{}], Step [{}/{}], Loss: {:.4f}"
-                      .format(epoch + 1, epoch_size, step + 1, num_batches, float(loss.numpy())))
+                      .format(epoch + 1, epoch_size, step + 1, num_batches, float(loss.detach().cpu().numpy())))
 
     # eval
     batch_x = x_test[0:batch_size]
-    nodes_q = variational({'x': torch.to_tensor(batch_x)}).nodes
+    nodes_q = variational({'x': torch.as_tensor(batch_x)}).nodes
     z = nodes_q['z'].tensor
     cache = generator({'z': z}).cache
-    sample = cache['x_mean'][0].numpy()
+    sample = cache['x_mean'].detach().cpu().numpy()
 
-    # z = torch.to_tensor(np.load('z.npy').astype(np.float32))
+    z = nodes_q['z'].tensor
     cache = generator({'z': z}).cache
-    sample_gen = cache['x_mean'][0].numpy()
+    sample_gen = cache['x_mean'].detach().cpu().numpy()
 
     result_fold = './results/flow-VAE'
     if not os.path.exists(result_fold):

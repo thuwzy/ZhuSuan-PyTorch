@@ -275,7 +275,7 @@ class HMC:
         self.mass_collect_iters = torch.as_tensor(mass_collect_iters, dtype=torch.int32)
         self.mass_decay = torch.as_tensor(mass_decay, dtype=dtype)
 
-    def _adapt_mass(self, t: Tensor, num_chain_dims) -> list[Tensor]:
+    def _adapt_mass(self, t: Tensor, num_chain_dims):
         ewmv = ExponentialWeightedMovingVariance(
             self.mass_decay, self.data_shapes, num_chain_dims)
         if self.adapt_mass:
