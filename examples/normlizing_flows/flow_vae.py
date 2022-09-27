@@ -9,7 +9,8 @@ from zhusuan.invertible import MaskCoupling, get_coupling_mask, Scaling, RevSequ
 from examples.utils import load_mnist_realval, save_img
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
+option = ["NICE", "Planar", "HouseHolder"]
+using_method = option[0]
 
 class Generator(BayesianNet):
     def __init__(self, x_dim, z_dim, batch_size):
@@ -17,7 +18,6 @@ class Generator(BayesianNet):
         self.x_dim = x_dim
         self.z_dim = z_dim
         self.batch_size = batch_size
-
         self.gen = nn.Sequential(
             nn.Linear(z_dim, 500),
             nn.ReLU(),
@@ -29,17 +29,11 @@ class Generator(BayesianNet):
 
     def forward(self, observed):
         self.observe(observed)
-
-        try:
-            batch_len = self.observed['z'].shape[0]
-        except:
-            batch_len = 100
+        batch_len = self.observed['z'].shape[0]
 
         prior = Normal(mean=torch.zeros([batch_len, self.z_dim]),
                        std=torch.ones([batch_len, self.z_dim]), dtype=torch.float32)
         z = self.sn(prior, "z", reduce_mean_dims=[0], reduce_sum_dims=[1])
-        # print(z.shape)
-
         x_probs = self.gen(z)
         self.cache['x_mean'] = x_probs
 
@@ -142,9 +136,9 @@ class HouseHolderFlow(RevNet):
 class PF(nn.Module):
     def __init__(self, z_dim):
         super(PF, self).__init__()
-        self.u = nn.Parameter(torch.zeros([1, z_dim]))
-        self.w = nn.Parameter(torch.zeros([1, z_dim]))
-        self.b = nn.Parameter(torch.zeros([1]))
+        self.u = nn.Parameter(torch.rand([1, z_dim]))
+        self.w = nn.Parameter(torch.rand([1, z_dim]))
+        self.b = nn.Parameter(torch.rand([1]))
 
     def forward(self, z, **kwargs):
         def m(z):
@@ -172,7 +166,7 @@ class PlanarFlow(nn.Module):
 
     def forward(self, z, **kwargs):
         out, log_det = self.flows(z[0])
-        res = {'z': out[0]}
+        res = {'z': out}
         return res, log_det
 
 
@@ -184,22 +178,26 @@ def main():
 
     z_dim = 40
     x_dim = 28 * 28 * 1
-
-    mid_dim_flow = 64
-    num_coupling = 10
-    num_hidden_per_coupling = 4
-
     lr = 0.001
 
     # create the network
     generator = Generator(x_dim, z_dim, batch_size)
     variational = Variational(x_dim, z_dim, batch_size)
-    # nice_flow = NICEFlow(z_dim, mid_dim_flow, num_coupling, num_hidden_per_coupling)
-    # model = ELBO(generator, variational, transform=nice_flow, transform_var=['z'])
-    # planar_flow = PlanarFlow(z_dim, 1)
-    # model = ELBO(generator, variational, transform=planar_flow, transform_var=['z'])
-    householder_flow = HouseHolderFlow(z_dim, 500, 5)
-    model = ELBO(generator, variational, transform=householder_flow, transform_var=['z'], auxillary_var=['z_logits'])
+
+    if using_method == "NICE":
+        mid_dim_flow = 64
+        num_coupling = 10
+        num_hidden_per_coupling = 4
+        nice_flow = NICEFlow(z_dim, mid_dim_flow, num_coupling, num_hidden_per_coupling)
+        model = ELBO(generator, variational, transform=nice_flow, transform_var=['z'])
+    elif using_method == "Planar":
+        planar_flow = PlanarFlow(z_dim, 1)
+        model = ELBO(generator, variational, transform=planar_flow, transform_var=['z'])
+    elif using_method == "HouseHolder":
+        householder_flow = HouseHolderFlow(z_dim, 500, 5)
+        model = ELBO(generator, variational, transform=householder_flow, transform_var=['z'], auxillary_var=['z_logits'])
+    else:
+        raise NotImplementedError("please select correct method")
 
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
@@ -215,7 +213,6 @@ def main():
             x = torch.reshape(x, [-1, x_dim])
             if x.shape[0] != batch_size:
                 continue
-            ##loss= model(x)
             loss = model({'x': x})
             loss.backward()
             optimizer.step()
@@ -240,7 +237,6 @@ def main():
     if not os.path.exists(result_fold):
         os.mkdir(result_fold)
 
-    print([sample.shape, batch_x.shape])
     save_img(batch_x, os.path.join(result_fold, 'origin_x_VAE+NICE.png'))
     save_img(sample, os.path.join(result_fold, 'reconstruct_x_VAE+NICE.png'))
     save_img(sample_gen, os.path.join(result_fold, 'sample_x_VAE+NICE.png'))
