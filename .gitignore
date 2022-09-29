@@ -26,3 +26,5 @@ docs/_build/
 data/*
 zhusuan/local/*
 zhusuan_pytorch.egg-info
+**/data
+**/results
