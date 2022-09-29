@@ -403,10 +403,6 @@ class HMC:
         # 取出k,v
         latent_k = list(latent.keys())
         latent_v = list(latent.values())
-        # for i, v in enumerate(latent_v):
-        #     if not isinstance(v, tf.Variable):
-        #         raise TypeError("latent['{}'] is not a tensorflow Variable."
-        #                         .format(latent_k[i]))
         self.q = [v.clone().requires_grad_() for v in latent_v]
 
         def get_log_posterior(var_list):
@@ -422,12 +418,6 @@ class HMC:
 
         self.dynamic_shapes = [q.shape for q in self.q]
         self.static_chain_shape = get_log_posterior(self.q).shape
-
-        # if not self.static_chain_shape:
-        #     raise ValueError(
-        #         "HMC requires that the static shape of the value returned "
-        #         "by log joint function should be at least partially defined. "
-        #         "(shape: {})".format(self.static_chain_shape))
 
         self.n_chain_dims = len(self.static_chain_shape)
         self.data_shapes = [

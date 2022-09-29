@@ -17,7 +17,7 @@ class FlowDistribution(Distribution):
     :param transformation: A RevNet instance, the Flow net work built by user
     :param flow_kwargs: additional info to be recode
     :param dtype: data type
-    :param device, device of Distribution
+    :param device: device of Distribution
 
     """
 
@@ -45,7 +45,7 @@ class FlowDistribution(Distribution):
         x, _ = self._transformation.forward(z, reverse=True, **kwargs)
         return x
 
-    def log_prob(self, *given, **kwargs):
+    def _log_prob(self, *given, **kwargs):
         z, log_det_J = self._transformation.forward(*given, **kwargs, reverse=False)
         log_ll = torch.sum(self._latents.log_prob(z), dim=1)
         return log_ll + log_det_J
