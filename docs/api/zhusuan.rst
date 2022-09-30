@@ -10,6 +10,7 @@ Subpackages
 -----------
 
 .. toctree::
+   :maxdepth: 4
 
    zhusuan.distributions
    zhusuan.framework
@@ -21,5 +22,6 @@ Submodules
 ----------
 
 .. toctree::
+   :maxdepth: 4
 
    zhusuan.utils

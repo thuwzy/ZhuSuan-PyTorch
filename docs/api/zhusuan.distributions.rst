@@ -6,12 +6,11 @@ zhusuan.distributions
     :undoc-members:
     :show-inheritance:
     :inherited-members:
-    :inherited-members:
 
-Submodules
-----------
+
 
 .. toctree::
+   :maxdepth: 4
 
    zhusuan.distributions.base
    zhusuan.distributions.bernoulli

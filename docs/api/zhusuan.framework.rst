@@ -6,12 +6,11 @@ zhusuan.framework
     :undoc-members:
     :show-inheritance:
     :inherited-members:
-    :inherited-members:
 
-Submodules
-----------
+
 
 .. toctree::
+   :maxdepth: 4
 
    zhusuan.framework.bn
    zhusuan.framework.stochastic_tensor

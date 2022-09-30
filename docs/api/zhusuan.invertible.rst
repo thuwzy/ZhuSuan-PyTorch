@@ -10,6 +10,7 @@ Submodules
 ----------
 
 .. toctree::
+   :maxdepth: 4
 
    zhusuan.invertible.base
    zhusuan.invertible.coupling

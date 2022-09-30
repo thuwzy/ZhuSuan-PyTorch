@@ -25,5 +25,6 @@ for module in modules:
     for option in options:
         rep += '\n' + indent + option
     post_module_string = re.sub(target, rep, module_string)
+    post_module_string = re.sub("Submodules\n----------", "", post_module_string)
     with open(module_path, 'w') as f:
         f.write(post_module_string)
