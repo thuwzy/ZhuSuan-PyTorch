@@ -58,6 +58,7 @@ If no error occurs, you've successfully installed ZhuSuan.
    tutorials/concepts
    tutorials/vae
    tutorials/bnn
+   tutorials/lntm
 
 
 .. toctree::
