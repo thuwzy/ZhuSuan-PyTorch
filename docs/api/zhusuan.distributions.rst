@@ -6,15 +6,22 @@ zhusuan.distributions
     :undoc-members:
     :show-inheritance:
     :inherited-members:
-    :inherited-members:
 
-Submodules
-----------
+
 
 .. toctree::
    :maxdepth: 4
 
    zhusuan.distributions.base
    zhusuan.distributions.bernoulli
+   zhusuan.distributions.beta
+   zhusuan.distributions.exponential
+   zhusuan.distributions.flow_distribution
+   zhusuan.distributions.gamma
+   zhusuan.distributions.laplace
    zhusuan.distributions.logistic
    zhusuan.distributions.normal
+   zhusuan.distributions.poisson
+   zhusuan.distributions.studentT
+   zhusuan.distributions.uniform
+   zhusuan.distributions.utils

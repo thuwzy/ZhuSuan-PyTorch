@@ -14,6 +14,7 @@ Subpackages
 
    zhusuan.distributions
    zhusuan.framework
+   zhusuan.invertible
    zhusuan.mcmc
    zhusuan.variational
 

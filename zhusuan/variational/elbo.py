@@ -6,7 +6,8 @@ class ELBO(nn.Module):
     """
     Short cut for class :class:`~zhusuan.variational.EvidenceLowerBoundObjective`
     """
-    def __init__(self, generator, variational, estimator='sgvb'):
+
+    def __init__(self, generator, variational, estimator='sgvb', transform=None, transform_var=[], auxillary_var=[]):
         super(ELBO, self).__init__()
 
         self.generator = generator
@@ -24,6 +25,13 @@ class ELBO(nn.Module):
             self.register_buffer('local_step', ls)
             self.moving_mean.requires_grad = False
 
+        if transform:
+            self.transform = transform
+            self.transform_var = transform_var
+            self.auxillary_var = auxillary_var
+        else:
+            self.transform = None
+
     def log_joint(self, nodes):
         """
         The default log joint probability function.
@@ -38,33 +46,65 @@ class ELBO(nn.Module):
             try:
                 log_joint_ += nodes[n_name].log_prob()
             except:
-                log_joint_ = nodes[n_name].log_prob() #TODO: figure it out
+                log_joint_ = nodes[n_name].log_prob()  # TODO: figure it out
         return log_joint_
 
     def forward(self, observed, reduce_mean=True, **kwargs):
         self.variational(observed)
         nodes_q = self.variational.nodes
 
-        _v_inputs = {k: v.tensor for k, v in nodes_q.items()}
-        _observed = {**_v_inputs, **observed}
+        log_det = None
+        if self.transform is not None:
+            _transformed_inputs = {}
+            _v_inputs = {}
 
-        self.generator(_observed)
-        nodes_p = self.generator.nodes
+            # Build input tuple for flow
+            flow_inputs = []
+            for k in self.transform_var:
+                # Only latent variable can be transformed
+                assert k not in observed.keys()
+                assert k in nodes_q.keys()
+                flow_inputs.append(nodes_q[k].tensor)
+            for k in self.auxillary_var:
+                flow_inputs.append(self.variational.cache[k])
+            flow_inputs = tuple(flow_inputs)
 
-        logpxz = self.log_joint(nodes_p)
-        logqz = self.log_joint(nodes_q)
+            # Transform
+            output, log_det = self.transform(flow_inputs)
+            assert len(output) == len(self.transform_var)  # All transformed var should be returned
+            for k in self.transform_var:
+                _transformed_inputs[k] = output[k]
+
+            for k, v in nodes_q.items():
+                if k not in _transformed_inputs.keys():
+                    _v_inputs[k] = v.tensor
+            _observed = {**_transformed_inputs, **_v_inputs, **observed}
+            self.generator(_observed)
+            nodes_p = self.generator.nodes
+            logpxz = self.log_joint(nodes_p)
+            logqz = self.log_joint(nodes_q)
+
+        else:
+            _v_inputs = {k: v.tensor for k, v in nodes_q.items()}
+            _observed = {**_v_inputs, **observed}
+            self.generator(_observed)
+            nodes_p = self.generator.nodes
+            logpxz = self.log_joint(nodes_p)
+            logqz = self.log_joint(nodes_q)
 
         if self.estimator == "sgvb":
-            return self.sgvb(logpxz, logqz, reduce_mean)
+            return self.sgvb(logpxz, logqz, reduce_mean, log_det)
         elif self.estimator == "reinforce":
             return self.reinforce(logpxz, logqz, reduce_mean, **kwargs)
 
-    def sgvb(self, logpxz, logqz, reduce_mean=True):
+    def sgvb(self, logpxz, logqz, reduce_mean=True, log_det=None):
         # sgvb
         if len(logqz.shape) > 0 and reduce_mean:
             elbo = torch.mean(logpxz - logqz)
         else:
             elbo = logpxz - logqz
+        if log_det is not None:
+            elbo += torch.mean(torch.sum(log_det)).squeeze()
         return -elbo
 
     def reinforce(self, logpxz, logqz, reduce_mean=True, baseline=None, variance_reduction=True, decay=0.8):
@@ -106,6 +146,7 @@ class ELBO(nn.Module):
                 cost = torch.mean(cost)
             return cost
 
+
 class EvidenceLowerBoundObjective(ELBO):
     """
     The class that represents the evidence lower bound (ELBO) objective for
@@ -118,5 +159,6 @@ class EvidenceLowerBoundObjective(ELBO):
     :param generator: A :class:`~zhusuan.framework.bn.BayesianNet` instance that typically defines the learning process.
     :param variational: A :class:`~zhusuan.framework.bn.BayesianNet` instance that defines the variational family.
     """
+
     def __init__(self, generator, variational, estimator='sgvb'):
         super().__init__(generator, variational, estimator)

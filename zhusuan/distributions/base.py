@@ -90,10 +90,10 @@ class Distribution(object):
             #TODO
             pass
 
-    # @property
-    # def dtype(self):
-    #     """The sample type of the distribution."""
-    #     return self._dtype
+    @property
+    def dtype(self):
+        """The sample type of the distribution."""
+        return self._dtype
 
     @property
     def device(self):
@@ -129,7 +129,7 @@ class Distribution(object):
         """
         raise NotImplementedError()
 
-    def sample(self, n_samples=None):
+    def sample(self, n_samples=None, **kwargs):
         """
         sample(n_samples=None)
         
@@ -144,15 +144,15 @@ class Distribution(object):
         :return: A Var of samples.
         """
         if n_samples is None:
-            samples = self._sample(n_samples=1)
+            samples = self._sample(n_samples=1, **kwargs)
             return samples
         elif isinstance(n_samples, int):
-            return self._sample(n_samples)
+            return self._sample(n_samples, **kwargs)
         else:
             #TODO
             pass
 
-    def _sample(self, n_samples):
+    def _sample(self, n_samples, **kwargs):
         """
         Private method for subclasses to rewrite the :meth:`sample` method.
         """

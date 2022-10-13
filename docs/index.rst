@@ -58,6 +58,7 @@ If no error occurs, you've successfully installed ZhuSuan.
    tutorials/concepts
    tutorials/vae
    tutorials/bnn
+   tutorials/lntm
 
 
 .. toctree::
@@ -68,6 +69,7 @@ If no error occurs, you've successfully installed ZhuSuan.
    api/zhusuan.framework
    api/zhusuan.variational
    api/zhusuan.mcmc
+   api/zhusuan.invertible
 
 .. toctree::
    :maxdepth: 1

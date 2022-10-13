@@ -1,5 +1,9 @@
 import torch
 from zhusuan.distributions import Distribution
+from zhusuan.distributions.utils import (
+    assert_same_log_float_dtype
+)
+
 
 class Uniform(Distribution):
     """
@@ -9,22 +13,25 @@ class Uniform(Distribution):
     :param low: A 'float' Var. Lower range (inclusive).
     :param high: A 'float' Var. Upper range (exclusive).
     """
-    def __init__(self,
-                dtype=torch.float32,
-                is_continues=True,
-                is_reparameterized=True,
-                group_ndims=0,
-                device=torch.device('cpu'),
-                **kwargs):
-        super(Uniform, self).__init__(dtype,
-                                       is_continues,
-                                       is_reparameterized,
-                                       group_ndims=group_ndims,
-                                       device=device,
-                                       **kwargs)
 
-        self._low = torch.as_tensor(kwargs['low'], dtype = self._dtype).to(device) if type(kwargs['low']) in [int, float] else kwargs['low'].to(device)
-        self._high = torch.as_tensor(kwargs['high'], dtype = self._dtype).to(device) if type(kwargs['high']) in [int, float] else kwargs['high'].to(device)
+    def __init__(self,
+                 low,
+                 high,
+                 dtype=None,
+                 is_continues=True,
+                 is_reparameterized=True,
+                 group_ndims=0,
+                 device=torch.device('cpu'),
+                 **kwargs):
+        self._low = torch.as_tensor(low, dtype=dtype).to(device)
+        self._high = torch.as_tensor(high, dtype=dtype).to(device)
+        dtype = assert_same_log_float_dtype([(self._low, "Uniform.low"), (self._high, "Uniform.high")])
+        super(Uniform, self).__init__(dtype,
+                                      is_continues,
+                                      is_reparameterized,
+                                      group_ndims=group_ndims,
+                                      device=device,
+                                      **kwargs)
 
     @property
     def low(self):
@@ -35,6 +42,9 @@ class Uniform(Distribution):
     def high(self):
         """Upper range (exclusive) of the Uniform distribution."""
         return self._high
+
+    def _batch_shape(self):
+        return torch.broadcast_shapes(self.low.shape, self.high.shape)
 
     def _sample(self, n_samples=1):
         if n_samples > 1:
@@ -49,11 +59,12 @@ class Uniform(Distribution):
             _high = torch.as_tensor(self._high, dtype=self._dtype)
 
         if not self.is_reparameterized:
-            _sample = torch.distributions.uniform.Uniform(_low, _high).sample()  
+            _sample = torch.distributions.uniform.Uniform(_low, _high).sample()
         else:
-            _sample = torch.distributions.uniform.Uniform(torch.zeros(_shape, dtype=self._dtype), torch.ones(_shape, dtype=self._dtype)).sample()
+            _sample = torch.distributions.uniform.Uniform(torch.zeros(_shape, dtype=self._dtype),
+                                                          torch.ones(_shape, dtype=self._dtype)).sample()
         self.sample_cache = _sample
-        return _sample*(_high-_low)+_low
+        return _sample * (_high - _low) + _low
 
     def _log_prob(self, sample=None):
         if sample is None:

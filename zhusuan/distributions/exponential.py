@@ -1,5 +1,9 @@
 import torch
 from zhusuan.distributions import Distribution
+from zhusuan.distributions.utils import (
+    assert_same_log_float_dtype
+)
+
 
 class Exponential(Distribution):
     """
@@ -8,25 +12,31 @@ class Exponential(Distribution):
 
     :param rate: A 'float' Var. Rate parameter of the Exponential distribution.
     """
-    def __init__(self,
-                dtype=torch.float32,
-                is_continues=True,
-                group_ndims=0,
-                device=torch.device('cpu'),
-                **kwargs):
-        super(Exponential, self).__init__(dtype,
-                                        is_continues,
-                                        is_reparameterized=False, # reparameterization trick is not applied for Exponential distribution
-                                        group_ndims=group_ndims,
-                                        device=device,
-                                        **kwargs)
 
-        self._rate = torch.as_tensor(kwargs['rate'], dtype = self._dtype).to(device) if type(kwargs['rate']) in [int, float] else kwargs['rate'].to(device)
+    def __init__(self,
+                 rate,
+                 dtype=None,
+                 is_continues=True,
+                 group_ndims=0,
+                 device=torch.device('cpu'),
+                 **kwargs):
+        self._rate = torch.as_tensor(rate, dtype=dtype).to(device)
+        dtype = assert_same_log_float_dtype([(self._rate, "Exponential.rate")])
+        super(Exponential, self).__init__(dtype,
+                                          is_continues,
+                                          is_reparameterized=False,
+                                          # reparameterization trick is not applied for Exponential distribution
+                                          group_ndims=group_ndims,
+                                          device=device,
+                                          **kwargs)
 
     @property
     def rate(self):
         """Shape parameter of the Exponential distribution."""
         return self._rate
+
+    def _batch_shape(self):
+        return self._rate.shape
 
     def _sample(self, n_samples=1):
         if n_samples > 1:

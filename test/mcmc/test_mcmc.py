@@ -30,9 +30,8 @@ class Test_Model(BayesianNet):
         self.observe(observed)
         return self
 
-    def log_joint(self, use_cache=False):
+    def _log_joint(self, use_cache=False):
         x = self.observed['x']
-        x.requires_grad = True # !check
         lh_noise = torch.normal(mean=0., std=2., size=x.shape)
         res = 2 * torch.pow(x, 2) - torch.pow(x, 4) + lh_noise
         return res.sum()
@@ -42,7 +41,7 @@ def sample_error_with(sampler, n_chains=1, n_iters=80000, thinning=50, burinin=N
                       sampler_type='hmc'):
     if burinin is None:
         burinin = n_iters * 2 // 3
-    x = torch.zeros([n_chains], dtype=dtype)
+    x = torch.zeros([n_chains], dtype=dtype, requires_grad=True)
     model = Test_Model(x)
     samples = []
     for t in range(n_iters):
@@ -50,7 +49,7 @@ def sample_error_with(sampler, n_chains=1, n_iters=80000, thinning=50, burinin=N
             resample = True if t == 0 else False
             x_sample = sampler.sample(model, {}, resample)['x'].detach().numpy()
         else:
-            x_sample = sampler.sample(model, {}, {'x': x})['x'].detach().numpy()
+            x_sample = sampler.sample(model, {}, {'x': x})[0]['x'].detach().numpy()
         if np.isnan(x_sample.sum()):
             raise ValueError("nan encountered")
         if t >= burinin and t % thinning == 0:
@@ -84,6 +83,12 @@ class TestSGMCMC(unittest.TestCase):
         e = sample_error_with(sampler, n_chains=100, n_iters=8000, sampler_type='sgld')
         print(e)
         assert (e < 0.088) # biased estimation
+
+    # def test_hmc(self):
+    #     sampler = mcmc.HMC(step_size=0.01, n_leapfrogs=10)
+    #     e = sample_error_with(sampler, n_chains=100, n_iters=8000)
+    #     print(e)
+    #     assert (e < 0.008)
 
     def test_sghmc(self):
         sampler = mcmc.SGHMC(learning_rate=0.01, n_iter_resample_v=50,

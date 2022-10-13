@@ -1,5 +1,9 @@
 import torch
 from zhusuan.distributions import Distribution
+from zhusuan.distributions.utils import (
+    assert_same_log_float_dtype
+)
+
 
 class Beta(Distribution):
     """
@@ -9,21 +13,25 @@ class Beta(Distribution):
     :param alpha: A 'float' Var. One of the two shape parameters of the Beta distribution.
     :param beta: A 'float' Var. One of the two shape parameters of the Beta distribution.
     """
-    def __init__(self,
-                dtype=torch.float32,
-                is_continues=True,
-                group_ndims=0,
-                device=torch.device('cpu'),
-                **kwargs):
-        super(Beta, self).__init__(dtype,
-                                    is_continues,
-                                    is_reparameterized=False, # reparameterization trick is not applied for Beta distribution
-                                    group_ndims=group_ndims,
-                                    device=device,
-                                    **kwargs)
 
-        self._alpha = torch.as_tensor(kwargs['alpha'], dtype = self._dtype).to(device) if type(kwargs['alpha']) in [int, float] else kwargs['alpha'].to(device)
-        self._beta = torch.as_tensor(kwargs['beta'], dtype = self._dtype).to(device) if type(kwargs['beta']) in [int, float] else kwargs['beta'].to(device)
+    def __init__(self,
+                 alpha,
+                 beta,
+                 dtype=None,
+                 is_continues=True,
+                 group_ndims=0,
+                 device=torch.device('cpu'),
+                 **kwargs):
+        self._alpha = torch.as_tensor(alpha, dtype=dtype)
+        self._beta = torch.as_tensor(beta, dtype=dtype)
+        dtype = assert_same_log_float_dtype([(self._alpha, "Beta.alpha"), (self._beta, "Beta.beta")])
+        super(Beta, self).__init__(dtype,
+                                   is_continues,
+                                   is_reparameterized=False,
+                                   # reparameterization trick is not applied for Beta distribution
+                                   group_ndims=group_ndims,
+                                   device=device,
+                                   **kwargs)
 
     @property
     def alpha(self):
@@ -34,6 +42,9 @@ class Beta(Distribution):
     def beta(self):
         """One of the two shape parameters of the Beta distribution."""
         return self._beta
+
+    def _batch_shape(self):
+        return torch.broadcast_shapes(self.alpha.shape, self.beta.shape)
 
     def _sample(self, n_samples=1):
         if n_samples > 1:
@@ -46,7 +57,6 @@ class Beta(Distribution):
             _shape = self._alpha.shape
             _alpha = torch.as_tensor(self._alpha, dtype=self._dtype)
             _beta = torch.as_tensor(self._beta, dtype=self._dtype)
-
         _sample = torch.distributions.beta.Beta(_alpha, _beta).sample()
         self.sample_cache = _sample
         return _sample

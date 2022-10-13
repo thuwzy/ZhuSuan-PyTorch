@@ -18,6 +18,7 @@ import numpy as np
 
 import unittest
 
+
 # log_prob
 class TestNode_Gen:
     def __init__(self, x_mean, x_std):
@@ -35,6 +36,7 @@ class TestNode_Gen:
         norm = Normal(mean=self.x_mean, std=self.x_std)
         return norm.log_prob(self.observed['x'])
 
+
 class TestNet_Gen(BayesianNet):
     def __init__(self, x_mean, x_std):
         super().__init__()
@@ -43,6 +45,7 @@ class TestNet_Gen(BayesianNet):
     def forward(self, observed):
         self._nodes["test"].observe(observed)
         return self
+
 
 # latent
 class TestNode_Var:
@@ -53,6 +56,7 @@ class TestNode_Var:
     def log_prob(self):
         return self.log_qx
 
+
 class TestNet_Var(BayesianNet):
     def __init__(self, qx_samples, log_qx):
         super().__init__()
@@ -60,6 +64,7 @@ class TestNet_Var(BayesianNet):
 
     def forward(self, observed):
         return self
+
 
 class TestEvidenceLowerBound(unittest.TestCase):
     def setUp(self):
@@ -71,6 +76,8 @@ class TestEvidenceLowerBound(unittest.TestCase):
         # paddle.disable_static(device)
 
     def test_objective(self):
+        # estimate the log prob of sampled data
+        # as for there are no latent variable, the objective reduce to KL(q, p)
         logqx = stats.norm.logpdf(self._n01_1e5).astype(np.float32)
         qx_samples = torch.tensor(self._n01_1e5)
         logqx = torch.tensor(logqx)
@@ -80,10 +87,11 @@ class TestEvidenceLowerBound(unittest.TestCase):
             _x_std = torch.tensor(x_std, requires_grad=False)
             model = ELBO(TestNet_Gen(_x_mean, _x_std), TestNet_Var(qx_samples, logqx))
             lower_bound = -model({}).numpy()
-            analytic_lower_bound = -_kl_normal_normal(torch.tensor(0.), torch.tensor(1.), _x_mean, _x_std)\
+            analytic_lower_bound = -_kl_normal_normal(torch.tensor(0.), torch.tensor(1.), _x_mean, _x_std) \
                 .numpy()
-            #print(lower_bound, analytic_lower_bound)
+            # print(lower_bound, analytic_lower_bound)
             self.assertAlmostEqual(lower_bound, analytic_lower_bound, delta=1e-3)
+
         _check_elbo(0., 1.)
         _check_elbo(2., 3.)
 
@@ -105,13 +113,12 @@ class TestEvidenceLowerBound(unittest.TestCase):
             true_cost = _kl_normal_normal(mu, sigma, x_mean, x_std)
             true_grads = torch.autograd.grad(true_cost, [mu, sigma], retain_graph=True)
             true_grads = torch.tensor(true_grads).numpy()
-            print('sgvb_grads: ', sgvb_grads)
+            print('\nsgvb_grads: ', sgvb_grads)
             print('true_grads: ', true_grads)
             np.testing.assert_allclose(sgvb_grads, true_grads, atol=atol, rtol=rtol)
 
         _check_sgvb(0., 1., rtol=1e-2)
         _check_sgvb(2., 3., atol=1e-2)
-
 
     def test_reinforce(self):
         eps_samples = torch.tensor(self._n01_1e6)
@@ -127,19 +134,20 @@ class TestEvidenceLowerBound(unittest.TestCase):
             _x_mean = torch.tensor(x_mean)
             _x_std = torch.tensor(x_std)
             model = ELBO(TestNet_Gen(_x_mean, _x_std), TestNet_Var(qx_samples, log_qx), estimator='reinforce')
-            #TODO: Check grads when use variance reduction and baseline
+            # TODO: Check grads when use variance reduction and baseline
             reinforce_cost = model({}, variance_reduction=False)
             reinforce_grads = torch.autograd.grad(reinforce_cost, [mu, sigma], retain_graph=True)
             reinforce_grads = torch.tensor(reinforce_grads).numpy()
             true_cost = _kl_normal_normal(mu, sigma, _x_mean, _x_std)
             true_grads = torch.autograd.grad(true_cost, [mu, sigma], retain_graph=True)
             true_grads = torch.tensor(true_grads).numpy()
-            print('reinforce_grads: ', reinforce_grads)
+            print('\nreinforce_grads: ', reinforce_grads)
             print('true_grads: ', true_grads)
             np.testing.assert_allclose(reinforce_grads, true_grads, rtol=rtol, atol=atol)
 
         _check_reinforce(0., 1., rtol=1e-2)
         _check_reinforce(2., 3., atol=1e-6)
+
 
 if __name__ == '__main__':
     unittest.main()
