@@ -12,7 +12,8 @@ options = [':inherited-members:']
 modules = ['zhusuan.distributions',
            'zhusuan.framework',
            'zhusuan.variational',
-           'zhusuan.mcmc',]
+           'zhusuan.mcmc',
+           'zhusuan.invertible']
 
 for module in modules:
     module_path = os.path.join(api_dir, module + '.rst')

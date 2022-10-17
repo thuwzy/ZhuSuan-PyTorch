@@ -4,7 +4,30 @@ import torch.nn as nn
 
 class ELBO(nn.Module):
     """
-    Short cut for class :class:`~zhusuan.variational.EvidenceLowerBoundObjective`
+    The class that represents the evidence lower bound (ELBO) objective for
+    variational inference. It can be constructed like a Jittor's `Module` by passing 2
+    :class:`~zhusuan.framework.bn.BayesianNet` instances. For example, the generator network and the variational
+    inference network in VAE. The model can calculate the ELBO's value with observations passed.
+
+    .. seealso::
+        For more details and examples, please refer to
+        :doc:`/tutorials/vae` and :doc:`/tutorials/bnn`
+
+    :param generator: A :class'~zhusuan.framework.BayesianNet` instance or a log joint probability function.
+        For the latter, it must accepts a dictionary argument of
+        ``(string, Tensor)`` pairs, which are mappings from all
+        node names in the model to their observed values. The
+        function should return a Tensor, representing the log joint likelihood
+        of the model.
+    :param variational: A :class:`~zhusuan.framework.bn.BayesianNet` instance
+        that defines the variational family.
+    :param estimator: gradient estimate method, including ``sgvb`` and ``reinforce``
+    :param transform: A :class:`~zhusuan.invertible.RevNet` instance that transform Specified variables,
+    returns the transformed variable and the log_det_J i.e log-determinant of transition Jacobian matrix
+    :param transform_var: a list of names of variable to be transformed, all tensor
+    that correspond to these names will be placed into tuple by order and feed to the transform
+    network
+    :param auxillary_var: auxillary variable name list that need to be passed to transform network
     """
 
     def __init__(self, generator, variational, estimator='sgvb', transform=None, transform_var=[], auxillary_var=[]):
@@ -50,6 +73,10 @@ class ELBO(nn.Module):
         return log_joint_
 
     def forward(self, observed, reduce_mean=True, **kwargs):
+        """
+        observe nodes, transform latent variables, return evidence lower bound
+        :return: evidence lower bound
+        """
         self.variational(observed)
         nodes_q = self.variational.nodes
 
@@ -98,7 +125,26 @@ class ELBO(nn.Module):
             return self.reinforce(logpxz, logqz, reduce_mean, **kwargs)
 
     def sgvb(self, logpxz, logqz, reduce_mean=True, log_det=None):
-        # sgvb
+        """
+           Implements the stochastic gradient variational bayes (SGVB) gradient
+           estimator for the objective, also known as "reparameterization trick"
+           or "path derivative estimator". It was first used for importance
+           weighted objectives in (Burda, 2015), where it's named "IWAE".
+
+           It only works for latent `StochasticTensor` s that can be
+           reparameterized (Kingma, 2013). For example,
+           :class:`~zhusuan.distribution.Normal`
+           and :class:`~zhusuan.framework.stochastic.Concrete`.
+
+           .. note::
+
+               To use the :meth:`sgvb` estimator, the ``is_reparameterized``
+               property of each latent `StochasticTensor` must be True (which is
+               the default setting when they are constructed).
+
+           :return: A Tensor. The surrogate cost for optimizers to
+               minimize.
+        """
         if len(logqz.shape) > 0 and reduce_mean:
             elbo = torch.mean(logpxz - logqz)
         else:
@@ -108,6 +154,44 @@ class ELBO(nn.Module):
         return -elbo
 
     def reinforce(self, logpxz, logqz, reduce_mean=True, baseline=None, variance_reduction=True, decay=0.8):
+        """
+        Implements the score function gradient estimator for the ELBO, with
+        optional variance reduction using moving mean estimate or "baseline".
+        Also known as "REINFORCE" (Williams, 1992), "NVIL" (Mnih, 2014),
+        and "likelihood-ratio estimator" (Glynn, 1990).
+
+        It works for all types of latent `StochasticTensor` s.
+
+        .. note::
+
+            To use the :meth:`reinforce` estimator, the ``is_reparameterized``
+            property of each reparameterizable latent `StochasticTensor` must
+            be set False.
+
+        :param logpxz: log joint of generator
+        :param logqz: log joint of variational
+        :param reduce_mean: whether reduce to a scalar by mean operation
+
+        :param baseline: A Tensor that can broadcast to match the shape
+            returned by `log_joint`. A trainable estimation for the scale of
+            the elbo value, which is typically dependent on observed values,
+            e.g., a neural network with observed values as inputs. This will be
+            additional.
+
+        :param variance_reduction: Bool. Whether to use variance reduction.
+            By default will subtract the learning signal with a moving mean
+            estimation of it. Users can pass an additional customized baseline
+            using the baseline argument, in that way the returned will be a
+            tuple of costs, the former for the gradient estimator, the latter
+            for adapting the baseline.
+
+        :param decay: Float. The moving average decay for variance
+            normalization.
+
+        :return: A Tensor. The surrogate cost for optimizers to
+            minimize.
+        """
+
         decay_tensor = torch.ones(size=[1], dtype=torch.float32) * decay
         l_signal = logpxz - logqz
         l_signal = l_signal.detach()
@@ -149,16 +233,13 @@ class ELBO(nn.Module):
 
 class EvidenceLowerBoundObjective(ELBO):
     """
-    The class that represents the evidence lower bound (ELBO) objective for
-    variational inference. It can be constructed like a Jittor's `Module` by passing 2 :class:`~zhusuan.framework.bn.BayesianNet` instances. For example, the generator network and the variational inference network in VAE. The model can calculate the ELBO's value with observations passed.
+    A alias of ELBO.
 
     .. seealso::
         For more details and examples, please refer to
-        :doc:`/tutorials/vae` and :doc:`/tutorials/bnn`
+        :doc:`/api/zhusuan.variational.elbo`
 
-    :param generator: A :class:`~zhusuan.framework.bn.BayesianNet` instance that typically defines the learning process.
-    :param variational: A :class:`~zhusuan.framework.bn.BayesianNet` instance that defines the variational family.
     """
 
-    def __init__(self, generator, variational, estimator='sgvb'):
-        super().__init__(generator, variational, estimator)
+    def __init__(self, generator, variational, estimator='sgvb', transform=None, transform_var=[], auxillary_var=[]):
+        super().__init__(generator, variational, estimator, transform, transform_var, auxillary_var)

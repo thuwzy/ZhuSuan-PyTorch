@@ -3,11 +3,11 @@ zhusuan.invertible
 
 .. automodule:: zhusuan.invertible
    :members:
-   :undoc-members:
-   :show-inheritance:
+    :undoc-members:
+    :show-inheritance:
+    :inherited-members:
 
-Submodules
-----------
+
 
 .. toctree::
    :maxdepth: 4

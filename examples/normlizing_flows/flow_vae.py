@@ -10,7 +10,7 @@ from examples.utils import load_mnist_realval, save_img
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 option = ["NICE", "Planar", "HouseHolder"]
-using_method = option[0]
+using_method = option[2]
 
 class Generator(BayesianNet):
     def __init__(self, x_dim, z_dim, batch_size):
