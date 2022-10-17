@@ -69,3 +69,36 @@ If you find ZhuSuan-PyTorch useful, please cite it in your publications.
 
 We always welcome contributions to help make ZhuSuan-PyTorch better. If you would like 
 to contribute, please check out the guidelines [here](https://zhusuan-pytorch.readthedocs.io/en/latest/contributing.html).
+
+
+
+## 当前进展
+
+
+
+| 部分                        | 代码 | 文档 | 测试 | 备注                           |
+| --------------------------- | ---- | ---- | ---- | ------------------------------ |
+| distribution                | √    | √    | √    | 分布部分基本完成, 仅需再次检查 |
+| framework.bn                | √    |      |      |                                |
+| framework.st                | √    |      |      |                                |
+| invertible.base             | √    |      |      |                                |
+| invertible.coupling         | √    |      |      |                                |
+| invertible.made             | √    |      |      |                                |
+| invertible.scaling          | √    |      |      |                                |
+| invertible.sequential       | √    |      |      |                                |
+| mcmc.HMC                    |      |      |      |                                |
+| mcmc.SGHMC                  | √    |      |      |                                |
+| mcmc.SGLD                   | √    |      |      |                                |
+| mcmc.SGMCMC                 | √    |      |      |                                |
+| variational.elbo            | √    |      | √    |                                |
+| variational.iw              | √    |      |      |                                |
+| normlizing_flows.flow_vae   | √    |      | -    |                                |
+| normlizing_flows.nice_mnist | √    |      | -    |                                |
+| topic_models.lntm           |      |      | -    |                                |
+| toy_examples.gaussian       |      |      | -    | HMC缺失                        |
+| vae.iwae                    | √    |      |      |                                |
+| vae.vae_mnist               | √    |      |      |                                |
+|                             |      |      |      | 这里还缺几个样例               |
+|                             |      |      |      |                                |
+|                             |      |      |      |                                |
+
