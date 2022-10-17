@@ -75,6 +75,7 @@ class ELBO(nn.Module):
     def forward(self, observed, reduce_mean=True, **kwargs):
         """
         observe nodes, transform latent variables, return evidence lower bound
+        :return: evidence lower bound
         """
         self.variational(observed)
         nodes_q = self.variational.nodes
@@ -235,8 +236,9 @@ class EvidenceLowerBoundObjective(ELBO):
     A alias of ELBO.
 
     .. seealso::
-    For more details and examples, please refer to
-    :class:`~zhusuan.variational.ELBO`
+        For more details and examples, please refer to
+        :doc:`/api/zhusuan.variational.elbo`
+
     """
 
     def __init__(self, generator, variational, estimator='sgvb', transform=None, transform_var=[], auxillary_var=[]):
