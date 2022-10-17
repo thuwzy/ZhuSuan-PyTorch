@@ -46,6 +46,7 @@ class ImportanceWeightedObjective(nn.Module):
     :param estimator: the estimator, a str in either 'sgvb' or 'vimco'
 
     """
+
     def __init__(self, generator, variational, axis=None, estimator='sgvb'):
         super().__init__()
         self.generator = generator
@@ -57,7 +58,7 @@ class ImportanceWeightedObjective(nn.Module):
                 "the `axis` argument must be specified.")
         self._axis = axis
 
-        supported_estimator = ['sgvb', 'vimco', "naive"]
+        supported_estimator = ['sgvb', 'vimco']
         if estimator not in supported_estimator:
             raise NotImplementedError()
         self.estimator = estimator
@@ -83,7 +84,7 @@ class ImportanceWeightedObjective(nn.Module):
         for k, v in nodes_q.items():
             _v_inputs[k] = v.tensor
             if self.estimator == "vimco" \
-                and isinstance(v, StochasticTensor)\
+                    and isinstance(v, StochasticTensor) \
                     and v.dist.is_reparameterized:
                 raise ValueError("with vimco estimator, the is_reparameterized must be false")
 
@@ -95,12 +96,30 @@ class ImportanceWeightedObjective(nn.Module):
 
         if self.estimator == 'sgvb':
             return self.sgvb(logpxz, logqz, reduce_mean)
-        elif self.estimator == 'naive':
-            return self.naive(logpxz, logqz, reduce_mean)
-        else:
+        else:  # self.estimator == 'vimco'
             return self.vimco(logpxz, logqz, reduce_mean)
 
     def sgvb(self, logpxz, logqz, reduce_mean=True):
+        """
+           Implements the stochastic gradient variational bayes (SGVB) gradient
+           estimator for the objective, also known as "reparameterization trick"
+           or "path derivative estimator". It was first used for importance
+           weighted objectives in (Burda, 2015), where it's named "IWAE".
+
+           It only works for latent `StochasticTensor` s that can be
+           reparameterized (Kingma, 2013). For example,
+           :class:`~zhusuan.distribution.Normal`
+           and :class:`~zhusuan.framework.stochastic.Concrete`.
+
+           .. note::
+
+               To use the :meth:`sgvb` estimator, the ``is_reparameterized``
+               property of each latent `StochasticTensor` must be True (which is
+               the default setting when they are constructed).
+
+           :return: A Tensor. The surrogate cost for optimizers to
+               minimize.
+        """
         log_w = logpxz - logqz
         if self._axis is not None:
             lower_bound = compute_iw_term(log_w, self._axis)
@@ -111,21 +130,6 @@ class ImportanceWeightedObjective(nn.Module):
             return torch.mean(-lower_bound)
         else:
             return -lower_bound
-
-    def naive(self, logpxz, logqz, reduce_mean=True):
-        log_w = logpxz - logqz
-
-        l_signal = log_mean_exp(log_w, self._axis, keepdims=True)
-        fake_term = torch.sum(logqz * l_signal.detach(), self._axis)
-
-        if self._axis is not None:
-            iw_term = compute_iw_term(log_w, self._axis)
-            log_w = iw_term + fake_term
-
-        if reduce_mean:
-            return torch.mean(-log_w)
-        else:
-            return - log_w
 
     def vimco(self, logpxz, logqz, reduce_mean=True):
         """
@@ -141,7 +145,7 @@ class ImportanceWeightedObjective(nn.Module):
             property of each reparameterizable latent `StochasticTensor` must
             be set False.
 
-        :return: A Tensor. The surrogate cost for Tensorflow optimizers to
+        :return: A Tensor. The surrogate cost for optimizers to
             minimize.
         """
 
