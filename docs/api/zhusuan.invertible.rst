@@ -1,19 +1,69 @@
 zhusuan.invertible 
 ==========================
 
-.. automodule:: zhusuan.invertible
-   :members:
+
+
+RevNet
+------
+
+.. autoclass:: zhusuan.invertible.base.RevNet
+    :members:
     :undoc-members:
     :show-inheritance:
-    :inherited-members:
+
+
+RevSequential
+-------------
+
+.. autoclass:: zhusuan.invertible.sequential.RevSequential
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Coupling
+--------
+
+.. autoclass:: zhusuan.invertible.coupling.Coupling
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 
 
-.. toctree::
-   :maxdepth: 4
+MaskCoupling
+------------
 
-   zhusuan.invertible.base
-   zhusuan.invertible.coupling
-   zhusuan.invertible.made
-   zhusuan.invertible.scaling
-   zhusuan.invertible.sequential
+.. autoclass:: zhusuan.invertible.coupling.MaskCoupling
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Scaling
+-------
+
+.. autoclass:: zhusuan.invertible.scaling.Scaling
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+MaskedLinear
+------------
+
+.. autoclass:: zhusuan.invertible.made.MaskedLinear
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+MADE
+-----
+
+.. autoclass:: zhusuan.invertible.made.MADE
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
