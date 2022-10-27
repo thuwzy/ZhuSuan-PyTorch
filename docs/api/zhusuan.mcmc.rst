@@ -1,17 +1,38 @@
 zhusuan.mcmc 
 ====================
 
-.. automodule:: zhusuan.mcmc
+SGMCMC
+------
+
+.. autoclass:: zhusuan.mcmc.SGMCMC.SGMCMC
    :members:
-    :undoc-members:
-    :show-inheritance:
-    :inherited-members:
+   :undoc-members:
+   :show-inheritance:
 
 
+SGLD
+----
 
-.. toctree::
-   :maxdepth: 4
+.. autoclass:: zhusuan.mcmc.SGLD.SGLD
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
-   zhusuan.mcmc.SGHMC
-   zhusuan.mcmc.SGLD
-   zhusuan.mcmc.SGMCMC
+
+PSGLD
+-----
+
+.. autoclass:: zhusuan.mcmc.SGLD.PSGLD
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+SGHMC
+-----
+
+.. autoclass:: zhusuan.mcmc.SGHMC.SGHMC
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
