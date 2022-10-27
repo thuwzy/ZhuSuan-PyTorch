@@ -1,5 +1,5 @@
 sphinxcontrib-bibtex
 sphinx_rtd_theme
-Sphinx
+Sphinx<4
 torch
 numpy
