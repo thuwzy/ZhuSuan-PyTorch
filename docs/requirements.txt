@@ -2,4 +2,5 @@ sphinxcontrib-bibtex
 sphinx_rtd_theme
 Sphinx<4
 torch
+jinja2==3.0.0
 numpy
