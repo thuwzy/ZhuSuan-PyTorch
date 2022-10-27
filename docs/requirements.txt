@@ -1,6 +1,6 @@
 sphinxcontrib-bibtex
 sphinx_rtd_theme
-Sphinx<4
+Sphinx--3.5.0
 torch
 jinja2==3.0.0
 numpy
