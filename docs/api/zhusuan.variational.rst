@@ -1,16 +1,23 @@
 zhusuan.variational 
 ===========================
 
-.. automodule:: zhusuan.variational
+
+
+ELBO
+----
+
+.. autoclass:: zhusuan.variational.elbo.ELBO
    :members:
-    :undoc-members:
-    :show-inheritance:
-    :inherited-members:
+   :undoc-members:
+   :show-inheritance:
 
 
+ImportanceWeightedObjective
+---------------------------
 
-.. toctree::
-   :maxdepth: 4
+.. autoclass:: zhusuan.variational.importance_weighted_objective.ImportanceWeightedObjective
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
-   zhusuan.variational.elbo
-   zhusuan.variational.importance_weighted_objective
+
