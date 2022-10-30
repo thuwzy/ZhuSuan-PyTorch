@@ -12,7 +12,6 @@ from __future__ import division
 import sys
 import os
 import time
-import IPython
 from six.moves import range, zip
 from copy import copy
 import numpy as np
