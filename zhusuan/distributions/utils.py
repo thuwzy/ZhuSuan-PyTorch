@@ -62,3 +62,10 @@ def assert_same_log_float_dtype(tensors_with_name):
     :return: The type of `tensors`.
     """
     return assert_same_dtype_in(tensors_with_name, log_floating_dtypes)
+
+
+def check_broadcast(mean, std):
+    """
+    check whether mean and std broadcast match
+    """
+    mean + std

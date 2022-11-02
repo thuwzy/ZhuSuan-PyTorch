@@ -37,3 +37,6 @@ class TestExponential(unittest.TestCase):
     def test_property(self):
         exp = Exponential(rate=0.1)
         self.assertEqual(exp.rate, torch.tensor(0.1))
+
+    def test_distribution_shape(self):
+        utils.test_and_save_distribution_img(Exponential(1.))

@@ -31,18 +31,9 @@ class TestNormal(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, r"Either.*should be passed"):
             Normal(mean=torch.zeros([2, 1]), std=torch.ones([2, 4, 3]), logstd=torch.zeros([2, 2, 3]))
 
-        # try:
-        #     Normal(mean=torch.zeros([2, 1]), logstd=torch.zeros([2, 4, 3]))
-        # except:
-        #     raise ValueError("should be broadcastable to match")
-
-        # try:
-        #     Normal(mean=torch.ones([2, 1]), std=torch.ones([2, 4, 3]))
-        # except:
-        #     raise ValueError("should be broadcastable to match")
-
-        Normal(mean=torch.ones([32, 1], dtype=torch.float32),
-               logstd=torch.ones([32, 1, 3], dtype=torch.float32))
+        # make sure broadcast pre-check
+        with self.assertRaises(RuntimeError):
+            Normal(mean=torch.zeros([2, 1]), logstd=torch.zeros([2, 4, 3]))
 
         dis = Normal(mean=torch.ones([32, 1], dtype=torch.float32),
                      std=torch.ones([32, 1, 3], dtype=torch.float32))

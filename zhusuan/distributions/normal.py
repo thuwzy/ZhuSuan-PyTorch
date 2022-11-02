@@ -6,6 +6,7 @@ from zhusuan.distributions.base import Distribution
 from zhusuan.distributions.utils import (
     assert_same_float_dtype,
     assert_same_log_float_dtype,
+    check_broadcast
 )
 
 
@@ -57,6 +58,7 @@ class Normal(Distribution):
             self._std: torch.Tensor = torch.as_tensor(std, dtype=dtype).to(device)
 
         # check dtype:
+        check_broadcast(self._std, self._mean)
         dtype = assert_same_log_float_dtype([(self._mean, "Normal.mean"), (self._std, "Normal.std")])
 
         super(Normal, self).__init__(dtype=dtype,

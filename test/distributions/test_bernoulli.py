@@ -52,3 +52,9 @@ class TestBernoulli(unittest.TestCase):
     def test_value(self):
         pass
         # TODO: get value checked
+
+
+
+    def test_distribution_shape(self):
+        dis = Bernoulli(probs=0.5)
+        utils.test_and_save_distribution_img(dis)

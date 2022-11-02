@@ -46,3 +46,6 @@ class TestPoisson(unittest.TestCase):
 
         log_porb = poisson._log_prob()
         self.assertEqual(log_porb.shape, rate.shape)
+
+    def test_distribution_shape(self):
+        utils.test_and_save_distribution_img(Poisson(0.3))

@@ -25,6 +25,9 @@ class TestLogistic(unittest.TestCase):
 
         with self.assertRaisesRegex(TypeError, r"must have a dtype in"):
             Logistic(loc=2, scale=2, dtype=torch.int64)
+        # make sure broadcast pre-check
+        with self.assertRaises(RuntimeError):
+            Logistic(torch.zeros([2, 1]), torch.zeros([2, 4, 3]))
 
     def test_dtype(self):
         utils.test_dtype_2parameter(self, Logistic)
@@ -37,3 +40,6 @@ class TestLogistic(unittest.TestCase):
 
     def test_log_prob_shape(self):
         utils.test_2parameter_log_prob_shape_same(self, Logistic, torch.ones, torch.ones, torch.ones)
+
+    def test_distribution_shape(self):
+        utils.test_and_save_distribution_img(Logistic(0., 1.))

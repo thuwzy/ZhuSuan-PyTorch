@@ -1,7 +1,8 @@
 import torch
 from zhusuan.distributions import Distribution
 from zhusuan.distributions.utils import(
-    assert_same_log_float_dtype
+    assert_same_log_float_dtype,
+    check_broadcast
 )
 
 
@@ -24,6 +25,7 @@ class Gamma(Distribution):
                  **kwargs):
         self._alpha = torch.as_tensor(alpha, dtype=dtype).to(device)
         self._beta = torch.as_tensor(beta, dtype=dtype).to(device)
+        check_broadcast(self.alpha, self.beta)
         dtype = assert_same_log_float_dtype([(self._alpha, "Gamma.alpha"), (self._beta, "Gamma.beta")])
         super(Gamma, self).__init__(dtype,
                                     is_continues,
