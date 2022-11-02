@@ -28,3 +28,4 @@ zhusuan/local/*
 zhusuan_pytorch.egg-info
 **/data
 **/results
+test/distributions/hist_images/

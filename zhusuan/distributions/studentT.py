@@ -1,7 +1,8 @@
 import torch
 from zhusuan.distributions import Distribution
 from zhusuan.distributions.utils import (
-    assert_same_log_float_dtype
+    assert_same_log_float_dtype,
+    check_broadcast
 )
 
 
@@ -28,6 +29,7 @@ class StudentT(Distribution):
         self._df = torch.as_tensor(df, dtype=dtype).to(device)
         self._loc = torch.as_tensor(loc, dtype=dtype).to(device)
         self._scale = torch.as_tensor(scale, dtype=dtype).to(device)
+        check_broadcast(self.loc, self.scale)
         dtype = assert_same_log_float_dtype([
             (self.df, "StudentT.df"),
             (self.loc, "StudentT.loc"),

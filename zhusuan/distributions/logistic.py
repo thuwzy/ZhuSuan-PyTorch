@@ -2,7 +2,8 @@ import torch
 import numpy as np
 from zhusuan.distributions import Distribution
 from zhusuan.distributions.utils import (
-    assert_same_log_float_dtype
+    assert_same_log_float_dtype,
+    check_broadcast
 )
 
 
@@ -26,6 +27,7 @@ class Logistic(Distribution):
 
         self._loc = torch.as_tensor(loc, dtype=dtype).to(device)
         self._scale = torch.as_tensor(scale, dtype=dtype).to(device)
+        check_broadcast(self._loc, self.scale)
         dtype = assert_same_log_float_dtype([(self._loc, "Logistic.loc"), (self._scale, "Logistic.scale")])
         super(Logistic, self).__init__(dtype,
                                        is_continues,

@@ -22,6 +22,11 @@ class TestBeta(unittest.TestCase):
         beta = Beta(torch.tensor([1., 2.]), torch.tensor([[1., 2.], [2., 3.]]))
         self.assertTrue(beta.alpha.equal(torch.tensor([1.,2.])))
 
+        # make sure broadcast pre-check
+        with self.assertRaises(RuntimeError):
+            Beta(torch.zeros([2, 1]), torch.zeros([2, 4, 3]))
+
+
     def test_dtype(self):
         utils.test_dtype_2parameter(self, Beta)
 
@@ -33,3 +38,11 @@ class TestBeta(unittest.TestCase):
 
     def test_log_prob_shape(self):
         utils.test_2parameter_log_prob_shape_same(self, Beta, torch.ones, torch.ones, torch.ones)
+
+
+
+
+
+
+    def test_distribution_shape(self):
+        utils.test_and_save_distribution_img(Beta(2.,2.))
