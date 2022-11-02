@@ -106,13 +106,14 @@ class MADE(RevNet):
         u = (x - m) * torch.exp(-loga)
         # MAF eq 5
         log_abs_det_jacobian = - loga
-        return (u,), log_abs_det_jacobian
+        return u, log_abs_det_jacobian
 
     def _inverse(self, u, cond_y=None, **kwargs):
         x = torch.zeros_like(u)
         # run through reverse model
         for i in self.input_degrees:
-            m, loga = self.net(self.net_input(x, cond_y).chunk(chunks=2, dim=1))
+            y = self.net_input(x, cond_y)
+            m, loga = self.net(y).chunk(chunks=2, dim=1)
             x[:, i] = u[:, i] * torch.exp(loga[:, i]) + m[:, i]
         log_det = loga
-        return (x,) , log_det
+        return x, log_det
