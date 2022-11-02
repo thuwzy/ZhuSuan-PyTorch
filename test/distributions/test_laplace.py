@@ -37,3 +37,9 @@ class TestLaplace(unittest.TestCase):
 
     def test_log_prob_shape(self):
         utils.test_2parameter_log_prob_shape_same(self, Laplace, torch.ones, torch.ones, torch.ones)
+
+
+
+
+    def test_distribution_shape(self):
+        utils.test_and_save_distribution_img(Laplace(0., 2.))

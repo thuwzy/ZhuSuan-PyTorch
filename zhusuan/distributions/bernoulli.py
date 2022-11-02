@@ -67,10 +67,10 @@ class Bernoulli(Distribution):
     def _batch_shape(self):
         return self.probs.shape
 
-    def _sample(self, n_samples=1):
+    def _sample(self, n_samples: int = 1, **kwargs):
         if n_samples > 1:
-            sample_shape = np.concatenate([[n_samples], self.batch_shape], axis=0).tolist()
-            _probs = self._probs * torch.ones(sample_shape).to(self.device)
+            sample_shape = np.concatenate([[n_samples], self.batch_shape], axis=0).astype(np.int32).tolist()
+            _probs = self._probs * torch.ones(tuple(sample_shape)).to(self.device)
         else:
             _probs = self._probs  # * torch.ones(self.batch_shape)
 
@@ -84,8 +84,8 @@ class Bernoulli(Distribution):
             sample = self.sample_cache
 
         if len(sample.shape) > len(self._probs.shape):
-            sample_shape = np.concatenate([[sample.shape[0]], self.batch_shape], axis=0).tolist()
-            _probs = self._probs * torch.ones(sample_shape).to(self.device)
+            sample_shape = np.concatenate([[sample.shape[0]], self.batch_shape], axis=0).astype(np.int32).tolist()
+            _probs = self._probs * torch.ones(tuple(sample_shape)).to(self.device)
         else:
             _probs = self._probs  # * torch.ones(self.batch_shape)
 

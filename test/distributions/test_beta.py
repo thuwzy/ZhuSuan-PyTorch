@@ -33,3 +33,11 @@ class TestBeta(unittest.TestCase):
 
     def test_log_prob_shape(self):
         utils.test_2parameter_log_prob_shape_same(self, Beta, torch.ones, torch.ones, torch.ones)
+
+
+
+
+
+
+    def test_distribution_shape(self):
+        utils.test_and_save_distribution_img(Beta(2.,2.))

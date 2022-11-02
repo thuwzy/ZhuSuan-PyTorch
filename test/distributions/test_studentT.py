@@ -37,3 +37,13 @@ class TestStudentT(unittest.TestCase):
 
     def test_log_prob_shape(self):
         utils.test_2parameter_log_prob_shape_same(self, StudentT, torch.ones, torch.ones, torch.ones)
+
+
+
+
+
+
+
+    def test_distribution_shape(self):
+        dis = StudentT(10., 0., 1.)
+        utils.test_and_save_distribution_img(dis)
