@@ -41,6 +41,19 @@ class TestCoupling(unittest.TestCase):
         x = torch.rand([1, 200])
         assert_invertible(self, flow, x)
 
+    def test_get_mask(self):
+        mask1 = get_coupling_mask(10, 1, 2, split_type="OddEven")
+        mask2 = get_coupling_mask(10, 1, 2, split_type="Half")
+        mask3 = get_coupling_mask(20, 1, 2, split_type="RandomHalf")
+        self.assertEqual(mask1[0].dtype, torch.float32)
+        self.assertEqual(mask2[0].dtype, torch.float32)
+        self.assertEqual(mask3[0].dtype, torch.float32)
+        delta1 = (mask1[0] - torch.tensor([0, 1, 0, 1, 0, 1, 0, 1, 0, 1])).abs_().sum().detach().numpy()
+        delta2 = (mask2[0] - torch.tensor([0, 0, 0, 0, 0, 1, 1, 1, 1, 1])).abs_().sum().detach().numpy()
+        self.assertLess(delta1, 1e-5)
+        self.assertLess(delta2, 1e-5)
+
+
 
 class TestMaskCoupling(unittest.TestCase):
 

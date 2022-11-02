@@ -5,21 +5,33 @@ from .base import RevNet
 from .sequential import RevSequential
 
 
-def get_coupling_mask(n_dim, n_channel, n_mask, split_type="OddEven"):
+def get_coupling_mask(n_dim, n_channel, n_mask, split_type="OddEven", dtype=torch.float32):
     """
     a function to make coupling masks
     """
     masks = []
-    if split_type == "OddEven":
-        if n_channel == 1:
-            mask = torch.arange(n_dim, dtype=torch.float32) % 2
+    if n_channel == 1:
+        if split_type == "OddEven":
+            mask = torch.arange(n_dim, dtype=dtype) % 2
             for i in range(n_mask):
                 masks.append(mask)
                 mask = 1. - mask
-    elif split_type == "Half":
-        pass
-    elif split_type == "RandomHalf":
-        pass
+
+        elif split_type == "Half":
+            half_len = n_dim // 2
+            half1 = torch.zeros(half_len)
+            half2 = torch.ones(n_dim - half_len)
+            mask = torch.cat([half1, half2], -1)
+            for i in range(n_mask):
+                masks.append(mask)
+                mask = 1 - mask
+
+        elif split_type == "RandomHalf":
+            mask = torch.randint(0, 2, (n_dim,), dtype=dtype)
+            for i in range(n_mask):
+                masks.append(mask)
+                mask = 1. - mask
+
     else:
         raise NotImplementedError()
     return masks
