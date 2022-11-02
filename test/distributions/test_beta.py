@@ -22,6 +22,11 @@ class TestBeta(unittest.TestCase):
         beta = Beta(torch.tensor([1., 2.]), torch.tensor([[1., 2.], [2., 3.]]))
         self.assertTrue(beta.alpha.equal(torch.tensor([1.,2.])))
 
+        # make sure broadcast pre-check
+        with self.assertRaises(RuntimeError):
+            Beta(torch.zeros([2, 1]), torch.zeros([2, 4, 3]))
+
+
     def test_dtype(self):
         utils.test_dtype_2parameter(self, Beta)
 

@@ -1,7 +1,8 @@
 import torch
 from zhusuan.distributions import Distribution
 from zhusuan.distributions.utils import (
-    assert_same_log_float_dtype
+    assert_same_log_float_dtype,
+    check_broadcast
 )
 
 
@@ -24,6 +25,7 @@ class Laplace(Distribution):
                  **kwargs):
         self._loc = torch.as_tensor(loc, dtype=dtype).to(device)
         self._scale = torch.as_tensor(scale, dtype=dtype).to(device)
+        check_broadcast(self.loc, self.scale)
         dtype = assert_same_log_float_dtype([(self._loc, "Laplace.loc"), (self._scale, "Laplace.scale")])
         super(Laplace, self).__init__(dtype,
                                       is_continues,

@@ -26,6 +26,10 @@ class TestGamma(unittest.TestCase):
         with self.assertRaisesRegex(TypeError, r"must have a dtype in"):
             Gamma(alpha=2, beta=2, dtype=torch.int64)
 
+        # make sure broadcast pre-check
+        with self.assertRaises(RuntimeError):
+            Gamma(torch.zeros([2, 1]), torch.zeros([2, 4, 3]))
+
     def test_dtype(self):
         utils.test_dtype_2parameter(self, Gamma)
 

@@ -26,6 +26,11 @@ class TestLaplace(unittest.TestCase):
         with self.assertRaisesRegex(TypeError, r"must have a dtype in"):
             Laplace(loc=2, scale=2, dtype=torch.int64)
 
+        # make sure broadcast pre-check
+        with self.assertRaises(RuntimeError):
+            Laplace(torch.zeros([2, 1]), torch.zeros([2, 4, 3]))
+
+
     def test_dtype(self):
         utils.test_dtype_2parameter(self, Laplace)
 

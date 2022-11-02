@@ -1,7 +1,8 @@
 import torch
 from zhusuan.distributions import Distribution
 from zhusuan.distributions.utils import (
-    assert_same_log_float_dtype
+    assert_same_log_float_dtype,
+    check_broadcast
 )
 
 
@@ -25,6 +26,7 @@ class Uniform(Distribution):
                  **kwargs):
         self._low = torch.as_tensor(low, dtype=dtype).to(device)
         self._high = torch.as_tensor(high, dtype=dtype).to(device)
+        check_broadcast(self.low, self.high)
         dtype = assert_same_log_float_dtype([(self._low, "Uniform.low"), (self._high, "Uniform.high")])
         super(Uniform, self).__init__(dtype,
                                       is_continues,
