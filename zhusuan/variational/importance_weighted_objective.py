@@ -183,7 +183,7 @@ class ImportanceWeightedObjective(nn.Module):
             sub_x = torch.transpose(sub_x, *list(perm))
         x_ex = torch.unsqueeze(x, int_dim).repeat(tuple(multiples))
         x_ex = x_ex - torch.diag_embed(x) + torch.diag_embed(sub_x)
-        control_variate = torch.permute(log_mean_exp(x_ex, int_dim - 1), list(perm))
+        control_variate = log_mean_exp(x_ex, int_dim - 1).permute(list(perm))
         l_signal = log_mean_exp(l_signal, self._axis, keepdims=True) - control_variate
         fake_term = torch.sum(logqz * l_signal.detach(), self._axis)
         iw_term = compute_iw_term(log_w, self._axis)
