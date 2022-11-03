@@ -176,7 +176,7 @@ class ImportanceWeightedObjective(nn.Module):
         originals = torch.ones(int_dim, dtype=torch.int32) * (int_dim - 1)
         perm = torch.where(original_mask, axis_dim, torch.arange(int_dim, dtype=torch.int32))
         perm = torch.where(axis_dim_mask, originals, perm)
-        multiples = torch.concat([torch.ones([int_dim], dtype=torch.int32), torch.tensor([x.shape[self._axis]])], 0)
+        multiples = torch.cat([torch.ones([int_dim], dtype=torch.int32), torch.tensor([x.shape[self._axis]])], 0)
         if len(perm) > 1:
             # exchange the sample dim and last dim
             x = torch.transpose(x, *list(perm))

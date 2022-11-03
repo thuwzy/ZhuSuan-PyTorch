@@ -78,7 +78,13 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['numpy>=1.19.1',],
+    install_requires=['numpy>=1.19.1',
+                      "torch>=1.9.0",
+                      "six",
+                      "pillow",
+                      "matplotlib",
+
+                      ],
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,
@@ -86,7 +92,7 @@ setup(
     # $ pip install -e .[dev,test]
     extras_require={
         'dev': [
-            'Sphinx>=4.0.2',
+            'Sphinx==3.5.0',
             'sphinx_rtd_theme',
             'sphinxcontrib-bibtex>=2.3.0',
             'pep8',
