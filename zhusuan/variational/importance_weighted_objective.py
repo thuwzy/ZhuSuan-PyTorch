@@ -176,14 +176,14 @@ class ImportanceWeightedObjective(nn.Module):
         originals = torch.ones(int_dim, dtype=torch.int32) * (int_dim - 1)
         perm = torch.where(original_mask, axis_dim, torch.arange(int_dim, dtype=torch.int32))
         perm = torch.where(axis_dim_mask, originals, perm)
-        multiples = torch.concat([torch.ones([int_dim], dtype=torch.int32), torch.tensor([x.shape[self._axis]])], 0)
+        multiples = torch.cat([torch.ones([int_dim], dtype=torch.int32), torch.tensor([x.shape[self._axis]])], 0)
         if len(perm) > 1:
             # exchange the sample dim and last dim
             x = torch.transpose(x, *list(perm))
             sub_x = torch.transpose(sub_x, *list(perm))
-        x_ex = torch.tile(torch.unsqueeze(x, int_dim), tuple(multiples))
+        x_ex = torch.unsqueeze(x, int_dim).repeat(tuple(multiples))
         x_ex = x_ex - torch.diag_embed(x) + torch.diag_embed(sub_x)
-        control_variate = torch.permute(log_mean_exp(x_ex, int_dim - 1), list(perm))
+        control_variate = log_mean_exp(x_ex, int_dim - 1).permute(list(perm))
         l_signal = log_mean_exp(l_signal, self._axis, keepdims=True) - control_variate
         fake_term = torch.sum(logqz * l_signal.detach(), self._axis)
         iw_term = compute_iw_term(log_w, self._axis)
