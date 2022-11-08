@@ -7,6 +7,8 @@ from __future__ import division
 
 import torch
 import unittest
+import numpy as np
+from scipy import stats
 from test.distributions import utils
 from zhusuan.distributions.beta import Beta
 
@@ -39,6 +41,18 @@ class TestBeta(unittest.TestCase):
     def test_log_prob_shape(self):
         utils.test_2parameter_log_prob_shape_same(self, Beta, torch.ones, torch.ones, torch.ones)
 
+
+    def test_value(self):
+        def _test_value(alpha, beta, given):
+            log_p = Beta(alpha, beta).log_prob(given)
+            target_log_p = stats.beta.logpdf(given, alpha, beta)
+            np.testing.assert_allclose(log_p.numpy(), target_log_p, rtol=1e-03)
+
+        _test_value([0.5], [0.5], [0.2])
+        with self.assertRaises(ValueError):
+            Beta([0.5], [0.5]).log_prob([2.])
+
+        # TODO: more value examples
 
 
 

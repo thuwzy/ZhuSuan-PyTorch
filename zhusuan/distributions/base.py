@@ -169,6 +169,7 @@ class Distribution(object):
             of ``(... + )batch_shape + value_shape``.
         :return: A Var of shape ``(... + )batch_shape[:-group_ndims]``.
         """
+        given = torch.as_tensor(given, dtype=self.dtype)
         log_p = self._log_prob(given)
         if self._group_ndims > 0:
             return torch.sum(log_p, [i for i in range(-self._group_ndims, 0)])
