@@ -51,19 +51,6 @@ deep generative models.
 * Variational Autoencoder (VAE):
   [SGVB](examples/variational_autoencoders/vae_mnist.py),
 
-## Citing ZhuSuan-PyTorch
-
-If you find ZhuSuan-PyTorch useful, please cite it in your publications.
-
-```
-@ARTICLE{zhusuan2017,
-  title={Zhu{S}uan: A Library for {B}ayesian Deep Learning},
-  author={Shi, Jiaxin and Chen, Jianfei. and Zhu, Jun and Sun, Shengyang
-          and Luo, Yucen and Gu, Yihong and Zhou, Yuhao},
-  journal={arXiv preprint arXiv:1709.05870},
-  year=2017,
-}
-```
 
 ## Contributing
 

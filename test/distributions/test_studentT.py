@@ -7,8 +7,11 @@ from __future__ import division
 
 import torch
 import unittest
+import numpy as np
+from scipy import stats
 from test.distributions import utils
 from zhusuan.distributions.studentT import StudentT
+
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
@@ -28,7 +31,16 @@ class TestStudentT(unittest.TestCase):
 
         # make sure broadcast pre-check
         with self.assertRaises(RuntimeError):
-            StudentT(10.,torch.zeros([2, 1]), torch.zeros([2, 4, 3]))
+            StudentT(10., torch.zeros([2, 1]), torch.zeros([2, 4, 3]))
+
+    def test_property(self):
+        loc = torch.rand([2, 2]).abs_()
+        scale = torch.rand([2, 2]).abs_()
+        s = StudentT(2., loc, scale)
+        self.assertTrue(loc.equal(s.loc))
+        self.assertTrue(s.scale.equal(scale))
+        sample = s.sample()
+        self.assertTrue(torch.norm(torch.log(s._prob(sample)) - s.log_prob(sample)) < 1e-6)
 
     def test_dtype(self):
         utils.test_dtype_3parameter(self, StudentT)
@@ -42,11 +54,17 @@ class TestStudentT(unittest.TestCase):
     def test_log_prob_shape(self):
         utils.test_2parameter_log_prob_shape_same(self, StudentT, torch.ones, torch.ones, torch.ones)
 
+    def test_value(self):
+        def _test_value(df, loc, scale, given):
+            log_p = StudentT(df, loc, scale).log_prob(given)
+            target_log_p = stats.nct.logpdf(given, df, 0, loc, scale)
+            np.testing.assert_allclose(log_p.numpy(), target_log_p, rtol=1e-03)
 
-
-
-
-
+        _test_value(torch.rand([2, 2]).abs_(), torch.rand([2, 2]),
+                    torch.rand([2, 2]).abs_(), torch.rand([2, 2]))
+        with self.assertRaises(ValueError):
+            _test_value([-2.], [1.1], [1.], [3.])
+            _test_value([2.], [1.1], [-1.], [3.])
 
     def test_distribution_shape(self):
         dis = StudentT(10., 0., 1.)

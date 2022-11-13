@@ -7,6 +7,8 @@ from __future__ import division
 
 import torch
 import unittest
+import numpy as np
+from scipy import stats
 from test.distributions import utils
 from zhusuan.distributions.exponential import Exponential
 
@@ -33,6 +35,18 @@ class TestExponential(unittest.TestCase):
 
     def test_log_porb_shape(self):
         utils.test_1parameter_log_prob_shape_same(self, Exponential, torch.ones, torch.ones)
+
+    def test_value(self):
+        def _test_value(beta, given):
+            beta = np.array(beta, dtype=np.float32)
+            log_p = Exponential(beta).log_prob(given)
+            # when alpha == 1., gamma distribution is same with Exponential distribution
+            target_log_p = stats.gamma.logpdf(given, 1., scale=1 / beta)
+            np.testing.assert_allclose(log_p.numpy(), target_log_p, rtol=1e-03)
+
+        _test_value([2.], [1.])
+        _test_value([10., 3, 6.7], [2., 4., 6.])
+
 
     def test_property(self):
         exp = Exponential(rate=0.1)

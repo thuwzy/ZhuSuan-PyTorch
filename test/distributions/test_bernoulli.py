@@ -5,9 +5,10 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
 
+import numpy as np
 import torch
 import unittest
-
+from scipy import stats
 from test.distributions import utils
 from zhusuan.distributions.bernoulli import Bernoulli
 
@@ -50,8 +51,25 @@ class TestBernoulli(unittest.TestCase):
         utils.test_1parameter_log_prob_shape_same(self, Bernoulli, torch.ones, torch.ones)
 
     def test_value(self):
-        pass
-        # TODO: get value checked
+        def _test_value(logits, given):
+            logits = np.array(logits, np.float32)
+            prob = 1. / (1. + np.exp(-logits))
+            given = np.array(given, np.float32)
+
+            target_log_p = stats.bernoulli.logpmf(given, prob)
+            target_p = stats.bernoulli.logpmf(given, prob)
+
+            bernoulli1 = Bernoulli(logits)
+            bernoulli2 = Bernoulli(probs=prob)
+            log_p1 = bernoulli1.log_prob(given)
+            log_p2 = bernoulli2.log_prob(given)
+            np.testing.assert_allclose(log_p1.numpy(), target_log_p, rtol=1e-3)
+            np.testing.assert_allclose(log_p2.numpy(), target_log_p, rtol=1e-3)
+
+        _test_value([0.], [0.])
+        _test_value([2., 1.], [0., 1.])
+
+        # TODO: more value examples
 
 
 

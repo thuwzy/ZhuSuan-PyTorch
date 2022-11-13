@@ -77,3 +77,6 @@ class Laplace(Distribution):
             _scale = self._scale
 
         return torch.distributions.laplace.Laplace(_loc, _scale).log_prob(sample)
+
+    def _prob(self, given):
+        return torch.exp(self._log_prob(given))

@@ -9,7 +9,7 @@ from zhusuan.distributions.utils import (
 
 class Logistic(Distribution):
     """
-    The class of univariate Logistic distribution, using the reparametrization trick from (Kingma, 2013).
+    The class of univariate Logistic distribution, always using the reparametrization trick from (Kingma, 2013).
     See :class:`~zhusuan.distributions.base.Distribution` for details.
 
     :param loc: A 'float' Var. The location term acting on standard Logistic distribution.
@@ -27,6 +27,8 @@ class Logistic(Distribution):
 
         self._loc = torch.as_tensor(loc, dtype=dtype).to(device)
         self._scale = torch.as_tensor(scale, dtype=dtype).to(device)
+        if torch.less_equal(self.scale, 0.).any():
+            raise ValueError("scale less than zero")
         check_broadcast(self._loc, self.scale)
         dtype = assert_same_log_float_dtype([(self._loc, "Logistic.loc"), (self._scale, "Logistic.scale")])
         super(Logistic, self).__init__(dtype,
@@ -79,3 +81,6 @@ class Logistic(Distribution):
 
         z = (sample - _loc) / _scale
         return -z - 2. * torch.nn.Softplus()(-z) - torch.log(_scale)
+
+    def _prob(self, given):
+        return torch.exp(self._log_prob(given))
