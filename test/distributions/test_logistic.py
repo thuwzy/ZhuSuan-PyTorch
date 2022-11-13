@@ -40,6 +40,20 @@ class TestLogistic(unittest.TestCase):
         sample = la.sample()
         self.assertTrue(torch.norm(torch.log(la._prob(sample)) - la.log_prob(sample)) < 1e-6)
 
+    def test_sample_reparameterized(self):
+        loc = torch.rand([2, 3], requires_grad=True)
+        scale = torch.rand([2, 3]).abs_().requires_grad_()
+
+        logistic = Logistic(loc, scale)
+        sample = logistic.sample()
+        loc_grad, scale_grad = torch.autograd.grad(
+            outputs=sample.sum(), inputs=[loc, scale],
+            allow_unused=True
+        )
+        self.assertTrue(loc_grad is not None)
+        self.assertTrue(scale_grad is not None)
+
+
     def test_dtype(self):
         utils.test_dtype_2parameter(self, Logistic)
 

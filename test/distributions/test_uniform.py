@@ -41,6 +41,19 @@ class TestUniform(unittest.TestCase):
         sample = uni.sample()
         self.assertTrue(torch.norm(torch.log(uni._prob(sample)) - uni.log_prob(sample)) < 1e-6)
 
+    def test_sample_reparameterized(self):
+        low = torch.rand([2, 3], requires_grad=True)
+        high = low.detach() + torch.rand([2, 3]).abs_().requires_grad_()
+
+        uni = Uniform(low, high)
+        sample = uni.sample()
+        loc_grad, scale_grad = torch.autograd.grad(
+            outputs=sample.sum(), inputs=[low, high],
+            allow_unused=True
+        )
+        self.assertTrue(loc_grad is not None)
+        self.assertTrue(scale_grad is not None)
+
     def test_dtype(self):
         utils.test_dtype_2parameter(self, Uniform)
 

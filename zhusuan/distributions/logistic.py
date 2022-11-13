@@ -9,7 +9,7 @@ from zhusuan.distributions.utils import (
 
 class Logistic(Distribution):
     """
-    The class of univariate Logistic distribution, using the reparametrization trick from (Kingma, 2013).
+    The class of univariate Logistic distribution, always using the reparametrization trick from (Kingma, 2013).
     See :class:`~zhusuan.distributions.base.Distribution` for details.
 
     :param loc: A 'float' Var. The location term acting on standard Logistic distribution.

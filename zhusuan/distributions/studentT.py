@@ -38,7 +38,7 @@ class StudentT(Distribution):
         super(StudentT, self).__init__(dtype,
                                        is_continues,
                                        is_reparameterized=False,
-                                       # reparameterization trick is not applied for Laplace distribution
+                                       # reparameterization trick is not applied for studentT distribution
                                        group_ndims=group_ndims,
                                        device=device,
                                        **kwargs)
