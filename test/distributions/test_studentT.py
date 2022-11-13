@@ -7,6 +7,8 @@ from __future__ import division
 
 import torch
 import unittest
+import numpy as np
+from scipy import stats
 from test.distributions import utils
 from zhusuan.distributions.studentT import StudentT
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -42,9 +44,17 @@ class TestStudentT(unittest.TestCase):
     def test_log_prob_shape(self):
         utils.test_2parameter_log_prob_shape_same(self, StudentT, torch.ones, torch.ones, torch.ones)
 
+    def test_value(self):
+        def _test_value(df, loc, scale, given):
+            log_p = StudentT(df, loc, scale).log_prob(given)
+            target_log_p = stats.nct.logpdf(given, df, 0, loc, scale)
+            np.testing.assert_allclose(log_p.numpy(), target_log_p, rtol=1e-03)
 
-
-
+        _test_value(torch.rand([2, 2]).abs_(), torch.rand([2, 2]),
+                    torch.rand([2, 2]).abs_(), torch.rand([2, 2]))
+        with self.assertRaises(ValueError):
+            _test_value([-2.], [1.1], [1.], [3.])
+            _test_value([2.], [1.1], [-1.], [3.])
 
 
 

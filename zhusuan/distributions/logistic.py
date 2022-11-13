@@ -27,6 +27,8 @@ class Logistic(Distribution):
 
         self._loc = torch.as_tensor(loc, dtype=dtype).to(device)
         self._scale = torch.as_tensor(scale, dtype=dtype).to(device)
+        if torch.less_equal(self.scale, 0.).any():
+            raise ValueError("scale less than zero")
         check_broadcast(self._loc, self.scale)
         dtype = assert_same_log_float_dtype([(self._loc, "Logistic.loc"), (self._scale, "Logistic.scale")])
         super(Logistic, self).__init__(dtype,

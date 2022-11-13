@@ -7,6 +7,8 @@ from __future__ import division
 
 import torch
 import unittest
+import numpy as np
+from scipy import stats
 from test.distributions import utils
 from zhusuan.distributions.uniform import Uniform
 
@@ -41,6 +43,18 @@ class TestUniform(unittest.TestCase):
 
     def test_log_prob_shape(self):
         utils.test_2parameter_log_prob_shape_same(self, Uniform, torch.zeros, torch.ones, torch.ones)
+
+    def test_value(self):
+        def _test_value(low, high, given):
+            low = np.array(low)
+            high = np.array(high)
+            log_p = Uniform(low, high).log_prob(given)
+            target_log_p = stats.uniform.logpdf(given, low, high-low)
+            np.testing.assert_allclose(log_p.numpy(), target_log_p, rtol=1e-03)
+
+        _test_value([4.], [5.], [4.5])
+        with self.assertRaises(ValueError):
+            _test_value([10.], [2.], [3.])
 
     def test_distribution_shape(self):
         utils.test_and_save_distribution_img(Uniform(-0.5, 0.5))

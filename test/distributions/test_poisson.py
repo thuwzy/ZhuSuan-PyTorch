@@ -7,7 +7,8 @@ from __future__ import division
 
 import torch
 import unittest
-
+import numpy as np
+from scipy import stats
 from test.distributions import utils
 from zhusuan.distributions.poisson import Poisson
 
@@ -34,6 +35,21 @@ class TestPoisson(unittest.TestCase):
 
     def test_log_porb_shape(self):
         utils.test_1parameter_log_prob_shape_same(self, Poisson, torch.ones, torch.ones)
+
+    def test_value(self):
+        def _test_value(l, given):
+            log_p = Poisson(l).log_prob(given)
+            target_log_p = stats.poisson.logpmf(given, l)
+            np.testing.assert_allclose(log_p.numpy(), target_log_p, rtol=1e-03)
+
+        _test_value([2.], [1.])
+        _test_value([2., 8.], [1., 3.])
+
+        with self.assertRaises(ValueError):
+            # raise when float given and minus rate
+            _test_value([2.], [1.1])
+            _test_value([-2.], [1.1])
+
 
     def test_property(self):
         rate = torch.tensor([3.3, 2.2, 9909.7])

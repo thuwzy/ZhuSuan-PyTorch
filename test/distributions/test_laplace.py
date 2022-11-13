@@ -6,6 +6,8 @@ from __future__ import print_function
 from __future__ import division
 
 import torch
+import numpy as np
+from scipy import stats
 import unittest
 from test.distributions import utils
 from zhusuan.distributions.laplace import Laplace
@@ -43,6 +45,18 @@ class TestLaplace(unittest.TestCase):
     def test_log_prob_shape(self):
         utils.test_2parameter_log_prob_shape_same(self, Laplace, torch.ones, torch.ones, torch.ones)
 
+
+    def test_value(self):
+        def _test_value(loc, scale, given):
+            log_p = Laplace(loc, scale).log_prob(given)
+            target_log_p = stats.laplace.logpdf(given, loc, scale)
+            np.testing.assert_allclose(log_p.numpy(), target_log_p, rtol=1e-03)
+
+        _test_value([2.], [1.], [3.])
+        _test_value([3., 4.], [1., 100.], [3., 100.])
+
+        with self.assertRaises(ValueError):
+            _test_value([2.], [-1.], [20.])
 
 
 
