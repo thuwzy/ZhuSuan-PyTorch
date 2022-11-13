@@ -32,6 +32,15 @@ class TestUniform(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             Uniform(torch.zeros([2, 1]), torch.zeros([2, 4, 3]))
 
+    def test_property(self):
+        low = torch.rand([2, 2]).abs_()
+        high = low + torch.rand([2, 2]).abs_()
+        uni = Uniform(low, high)
+        self.assertTrue(low.equal(uni.low))
+        self.assertTrue(uni.high.equal(high))
+        sample = uni.sample()
+        self.assertTrue(torch.norm(torch.log(uni._prob(sample)) - uni.log_prob(sample)) < 1e-6)
+
     def test_dtype(self):
         utils.test_dtype_2parameter(self, Uniform)
 

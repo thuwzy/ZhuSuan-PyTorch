@@ -77,3 +77,6 @@ class Gamma(Distribution):
             _beta = self._beta
 
         return torch.distributions.gamma.Gamma(_alpha, _beta).log_prob(sample)
+
+    def _prob(self, given):
+        return torch.exp(self._log_prob(given))

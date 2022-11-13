@@ -31,6 +31,15 @@ class TestLogistic(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             Logistic(torch.ones([2, 1]), torch.ones([2, 4, 3]))
 
+    def test_property(self):
+        loc = torch.rand([2, 2]).abs_()
+        scale = torch.rand([2, 2]).abs_()
+        la = Logistic(loc, scale)
+        self.assertTrue(loc.equal(la.loc))
+        self.assertTrue(la.scale.equal(scale))
+        sample = la.sample()
+        self.assertTrue(torch.norm(torch.log(la._prob(sample)) - la.log_prob(sample)) < 1e-6)
+
     def test_dtype(self):
         utils.test_dtype_2parameter(self, Logistic)
 

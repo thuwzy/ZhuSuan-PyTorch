@@ -94,3 +94,6 @@ class StudentT(Distribution):
             _df = self._df
 
         return torch.distributions.studentT.StudentT(_df, _loc, _scale).log_prob(sample)
+
+    def _prob(self, given):
+        return torch.exp(self._log_prob(given))

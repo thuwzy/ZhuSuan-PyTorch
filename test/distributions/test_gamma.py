@@ -32,6 +32,16 @@ class TestGamma(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             Gamma(torch.zeros([2, 1]), torch.zeros([2, 4, 3]))
 
+    def test_property(self):
+        alpha = torch.rand([2, 2]).abs_()
+        beta = torch.rand([2, 2]).abs_()
+        be = Gamma(alpha, beta)
+        self.assertTrue(alpha.equal(be.alpha))
+        self.assertTrue(be.beta.equal(beta))
+        sample = be.sample()
+        self.assertTrue(torch.norm(torch.log(be._prob(sample)) - be.log_prob(sample)) < 1e-6)
+
+
     def test_dtype(self):
         utils.test_dtype_2parameter(self, Gamma)
 

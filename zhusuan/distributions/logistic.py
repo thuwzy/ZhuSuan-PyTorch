@@ -81,3 +81,6 @@ class Logistic(Distribution):
 
         z = (sample - _loc) / _scale
         return -z - 2. * torch.nn.Softplus()(-z) - torch.log(_scale)
+
+    def _prob(self, given):
+        return torch.exp(self._log_prob(given))

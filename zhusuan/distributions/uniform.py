@@ -81,3 +81,6 @@ class Uniform(Distribution):
             _high = self._high
 
         return torch.distributions.uniform.Uniform(_low, _high).log_prob(sample)
+
+    def _prob(self, given):
+        return torch.exp(self._log_prob(given))
