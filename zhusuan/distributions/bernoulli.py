@@ -33,7 +33,6 @@ class Bernoulli(Distribution):
                  probs=None,
                  dtype=None,
                  is_continues=False,
-                 is_reparameterized=True,
                  group_ndims=0,
                  device=torch.device('cpu'),
                  **kwargs):
@@ -51,7 +50,8 @@ class Bernoulli(Distribution):
         dtype = assert_same_log_float_dtype([(self._probs, "Bernoulli.probs")])
         super(Bernoulli, self).__init__(dtype,
                                         is_continues,
-                                        is_reparameterized,
+                                        is_reparameterized=False,
+                                        # reparameterization trick is not applied for Bernoulli distribution
                                         group_ndims=group_ndims,
                                         device=device,
                                         **kwargs)
