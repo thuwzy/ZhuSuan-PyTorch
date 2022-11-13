@@ -7,13 +7,14 @@ from __future__ import division
 
 import numpy as np
 import torch
+import time
 from scipy import stats
 import matplotlib.pyplot as plt
 import zhusuan as zs
 import random
 from zhusuan.framework import BayesianNet
 from zhusuan.distributions import Normal
-from zhusuan.mcmc import HMC
+from zhusuan.mcmc import SGLD
 
 
 class Gaussian(BayesianNet):
@@ -53,32 +54,23 @@ if __name__ == '__main__':
 
     # Build the computation graph
     model = Gaussian(n_x, stdev, n_chains)
-
+    sampler = SGLD(learning_rate=1e-3)
     samples = []
+    time_st = time.time()
     print('Sampling...')
     for i in range(n_iters):
-        if_plot = False
-        if i == 7:
-            print(i)
-            # if_plot = True
-        init_x = torch.zeros([n_chains, n_x], requires_grad=False)
-        adapt_step_size: bool = i < burnin // 2
-        adapt_mass: bool = i < burnin // 2
-        hmc = HMC(step_size=1e-3, n_leapfrogs=n_leapfrogs,
-                  adapt_step_size=adapt_step_size, adapt_mass=adapt_mass,
-                  target_acceptance_rate=0.9, if_plot=if_plot)
-        sample, hmc_info = hmc.sample(model, {}, {"x": init_x})
-        x_sample = hmc_info.samples["x"]
-        print(x_sample)
-        acc = hmc_info.acceptance_rate
-        ss = hmc_info.updated_step_size
-        print('Sample {}: Acceptance rate = {}, updated step size = {}'
-              .format(i, torch.mean(acc), ss))
-        if i >= burnin:
-            samples.append(x_sample)
+        if i % 2 == 0:
+            d_time = time.time() - time_st
+            time_st = time.time()
+            print('step: {}, time: {:4f}s'.format(i, d_time))
+        sample_ = sampler.sample(model, {},
+                                True if i == 0 else False,
+                                step=2000)
+        samples.append(sample_['x'].cpu().detach().numpy())
+
     print('Finished.')
 
-    samples = [sample.detach().numpy() for sample in samples]
+    samples = np.vstack(samples)
     # Check & plot the results
     print('Expected mean = {}'.format(np.zeros(n_x)))
     print('Sample mean = {}'.format(np.mean(samples)))
