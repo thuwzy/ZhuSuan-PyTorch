@@ -182,3 +182,12 @@ class Distribution(object):
         Private method for subclasses to rewrite the :meth:`log_prob` method.
         """
         raise NotImplementedError()
+
+    def prob(self, given):
+        return self._prob(given)
+
+    def _prob(self, given):
+        """
+        Private method for subclasses to rewrite the :meth:`prob` method.
+        """
+        raise NotImplementedError()

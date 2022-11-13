@@ -40,7 +40,7 @@ class TestStudentT(unittest.TestCase):
         self.assertTrue(loc.equal(s.loc))
         self.assertTrue(s.scale.equal(scale))
         sample = s.sample()
-        self.assertTrue(torch.norm(torch.log(s._prob(sample)) - s.log_prob(sample)) < 1e-6)
+        self.assertTrue(torch.norm(torch.log(s.prob(sample)) - s.log_prob(sample)) < 1e-6)
 
     def test_dtype(self):
         utils.test_dtype_3parameter(self, StudentT)

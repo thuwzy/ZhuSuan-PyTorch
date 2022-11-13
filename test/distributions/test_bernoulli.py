@@ -33,10 +33,13 @@ class TestBernoulli(unittest.TestCase):
             Bernoulli(probs=0, dtype=torch.int64)
 
     def test_property(self):
-        input = [[1, 2], [1, 3]]
-        ber = Bernoulli(logits=torch.tensor(input, dtype=torch.float32))
-        self.assertEqual(list(ber.logits.shape), [2, 2])
-        self.assertEqual(list(ber.probs.shape), [2, 2])
+        logits = torch.rand([2, 2])
+        ber = Bernoulli(logits=logits)
+        self.assertTrue(logits.equal(ber.logits))
+        self.assertTrue(torch.sigmoid(logits).equal(ber.probs))
+        sample = ber.sample()
+        self.assertTrue(torch.norm(torch.log(ber.prob(sample)) - ber.log_prob(sample)) < 1e-6)
+
 
     def test_batch_shape(self):
         utils.test_batch_shape_1parameter(self, Bernoulli, torch.ones, True)

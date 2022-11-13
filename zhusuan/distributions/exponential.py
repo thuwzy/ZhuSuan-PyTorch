@@ -63,3 +63,6 @@ class Exponential(Distribution):
             _rate = self._rate
 
         return torch.distributions.exponential.Exponential(_rate).log_prob(sample)
+
+    def _prob(self, given):
+        return torch.exp(self._log_prob(given))

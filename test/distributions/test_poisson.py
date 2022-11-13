@@ -56,7 +56,7 @@ class TestPoisson(unittest.TestCase):
         poisson = Poisson(rate)
         self.assertTrue(rate.equal(poisson._rate))
         given = torch.ones([3])
-        porb = poisson._prob(given)
+        porb = poisson.prob(given)
         self.assertEqual(porb.shape, given.shape)
         poisson.sample()
 

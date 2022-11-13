@@ -39,7 +39,7 @@ class TestUniform(unittest.TestCase):
         self.assertTrue(low.equal(uni.low))
         self.assertTrue(uni.high.equal(high))
         sample = uni.sample()
-        self.assertTrue(torch.norm(torch.log(uni._prob(sample)) - uni.log_prob(sample)) < 1e-6)
+        self.assertTrue(torch.norm(torch.log(uni.prob(sample)) - uni.log_prob(sample)) < 1e-6)
 
     def test_sample_reparameterized(self):
         low = torch.rand([2, 3], requires_grad=True)

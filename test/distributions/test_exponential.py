@@ -24,6 +24,14 @@ class TestExponential(unittest.TestCase):
         with self.assertRaisesRegex(TypeError, r"must have a dtype in"):
             Exponential(0, dtype=torch.int64)
 
+    def test_property(self):
+        rate = torch.rand([2, 2]).abs_()
+        exp = Exponential(rate=rate)
+        self.assertTrue(exp.rate.equal(rate))
+        sample = exp.sample()
+        self.assertTrue(torch.norm(torch.log(exp.prob(sample)) - exp.log_prob(sample)) < 1e-6)
+
+
     def test_dtype(self):
         utils.test_float_dtype_1parameter_discrete(self, Exponential, allow_16bit=False)
 
@@ -46,11 +54,6 @@ class TestExponential(unittest.TestCase):
 
         _test_value([2.], [1.])
         _test_value([10., 3, 6.7], [2., 4., 6.])
-
-
-    def test_property(self):
-        exp = Exponential(rate=0.1)
-        self.assertEqual(exp.rate, torch.tensor(0.1))
 
     def test_distribution_shape(self):
         utils.test_and_save_distribution_img(Exponential(1.))

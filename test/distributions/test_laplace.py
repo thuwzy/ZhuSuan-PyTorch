@@ -39,7 +39,7 @@ class TestLaplace(unittest.TestCase):
         self.assertTrue(loc.equal(la.loc))
         self.assertTrue(la.scale.equal(scale))
         sample = la.sample()
-        self.assertTrue(torch.norm(torch.log(la._prob(sample)) - la.log_prob(sample)) < 1e-6)
+        self.assertTrue(torch.norm(torch.log(la.prob(sample)) - la.log_prob(sample)) < 1e-6)
 
     def test_dtype(self):
         utils.test_dtype_2parameter(self, Laplace)

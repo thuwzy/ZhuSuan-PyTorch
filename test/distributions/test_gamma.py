@@ -39,7 +39,7 @@ class TestGamma(unittest.TestCase):
         self.assertTrue(alpha.equal(be.alpha))
         self.assertTrue(be.beta.equal(beta))
         sample = be.sample()
-        self.assertTrue(torch.norm(torch.log(be._prob(sample)) - be.log_prob(sample)) < 1e-6)
+        self.assertTrue(torch.norm(torch.log(be.prob(sample)) - be.log_prob(sample)) < 1e-6)
 
 
     def test_dtype(self):
