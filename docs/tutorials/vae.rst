@@ -5,7 +5,7 @@ Variational Autoencoders
 most widely used deep generative models.
 In this tutorial, we show how to implement VAE in ZhuSuan step by step.
 The full script is at
-`examples/variational_autoencoders/vae.py <https://github.com/thuwzy/ZhuSuan-PyTorch/blob/main/examples/variational_autoencoder/vae_mnist.py>`_.
+`examples/variational_autoencoders/vae_mnist.py <https://github.com/thuwzy/ZhuSuan-PyTorch/blob/main/examples/variational_autoencoder/vae_mnist.py>`_.
 
 The generative process of a VAE for modeling binarized
 `MNIST <http://yann.lecun.com/exdb/mnist/>`_ data is as

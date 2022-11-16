@@ -49,7 +49,7 @@ deep generative models.
   [SGVB](examples/bayesian_neural_nets/bnn_vi.py),
   [SGMCMC](examples/bayesian_neural_nets/bnn_sgmcmc.py)
 * Variational Autoencoder (VAE):
-  [SGVB](examples/variational_autoencoders/vae_mnist.py),
+  [SGVB](examples/variational_autoencoder/vae_mnist.py),
 
 
 ## Contributing
