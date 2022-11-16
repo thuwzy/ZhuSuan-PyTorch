@@ -41,35 +41,14 @@ An example of univariate distributions
 (:class:`~zhusuan.distributions.normal.Normal`)::
 
     >>> import torch
-
-    >>> dist_b = zs.distributions.Normal(mean=torch.tensor([[-1., 1.], [0., -2.]]), std=torch.tensor([0., 1.]))
+    >>> dist_b = zs.distributions.Normal(mean=[[-1., 1.], [0., -2.]], std=[0., 1.])
 
     >>> dist_b.sample().shape
-    [2,2,]
+    torch.Size([2, 2])
 
     >>> dist_b.sample(10).shape
-    [10,2,2,]
+    torch.Size([10, 2, 2])
 
-.. and an example of multivariate distributions
-.. (:class:`~zhusuan.distributions.multivariate.OnehotCategorical`)::
-
-..     >>> c = zs.distributions.OnehotCategorical([[0., 1., -1.],
-..     ...                                         [2., 3., 4.]])
-
-..     >>> c.batch_shape.eval()
-..     array([2], dtype=int32)
-
-..     >>> c.value_shape.eval()
-..     array([3], dtype=int32)
-
-..     >>> tf.shape(c.sample()).eval()
-..     array([2, 3], dtype=int32)
-
-..     >>> tf.shape(c.sample(1)).eval()
-..     array([1, 2, 3], dtype=int32)
-
-..     >>> tf.shape(c.sample(10)).eval()
-..     array([10,  2,  3], dtype=int32)
 
 There are cases where a batch of random variables are grouped into a
 single event so that their probabilities can be computed together.
@@ -88,10 +67,9 @@ broadcastable to shape ``(... + )batch_shape + value_shape``.
 The returned Tensor has shape ``(... + )batch_shape[:-group_ndims]``.
 For example::
 
-    >>> dist_c = zs.distributions.Normal(mean=torch.tensor([[-1., 1.], [0., -2.]]), std=1.,
-    ...                                  group_ndims=1)
+    >>> dist_c = zs.distributions.Normal(mean=[[-1., 1.], [0., -2.]], std=1., group_ndims=1)
 
-    >>> dist_c.log_prob(torch.zeros[1])
+    >>> dist_c.log_prob(torch.zeros([1]))
     tensor([-2.837877  -3.8378773])
 
     >>> dist_d = zs.distributions.Normal(mean=torch.zeros([2, 1, 3]), std=1.,
@@ -119,7 +97,7 @@ The generative process of the model is
 where :math:`x` denotes the input feature in the linear regression.
 We apply a Bayesian treatment and assume a Normal prior distribution of the
 regression weights :math:`w`. Suppose the input feature has 5 dimensions. For
-simplicity we define the input as a placeholder and fix the hyper-parameters::
+simplicity we define the input as a random vector and fix the hyper-parameters::
 
     x = torch.rand([5])
     alpha = 1.
@@ -128,6 +106,7 @@ simplicity we define the input as a placeholder and fix the hyper-parameters::
 To define the model, the first step is to define a subclass of
 :class:`~zhusuan.framework.bn.BayesianNet`::
 
+    from zhusuan.framework.bn import BayesianNet
     class Net(BayesianNet):
         def __init__(self):
             # Initialize...
@@ -143,6 +122,13 @@ keep two kinds of nodes:
   The ``w`` node can be constructed as::
 
         w = self.stochastic_node('Normal', name="w", mean=torch.zeros([x.shape[-1]]), std=alpha)
+
+  Alternatively, to prevent passing wrong parameter to distribution classes(``mean`` and ``std`` are passed to Normal
+  class in the above code),  stochastic nodes can be also constructed by::
+
+        from zhusuan.distributions import Normal
+        normal = Normal(mean=torch.zeros([x.shape[-1]]), std=alpha)
+        w = self.stochastic_node(normal, name="w")
 
   Here ``w`` is a :class:`~zhusuan.framework.stochastic_tensor.StochasticTensor` that follows
   the :class:`~zhusuan.distributions.normal.Normal` distribution, it will be registered to 
@@ -174,13 +160,14 @@ The full code of building a Bayesian linear regression model is like::
 
     class bayesian_linear_regression(BayesianNet):
         def __init__(self, alpha, beta):
+            super().__init__()
             self.alpha = alpha
             self.beta = beta
         
         def forward(self, observed):
             self.observe(observed)
-            w = self.stochastic_node('Normal', name="w", mean=torch.zeros([x.shape[-1]]), std=alpha)
             x = self.observed['x']
+            w = self.stochastic_node('Normal', name="w", mean=torch.zeros([x.shape[-1]]), std=alpha)
             y_mean = torch.sum(w * x, dim=-1)
             y = self.stochastic_node('Normal', name="y", mean=y_mean, std=beta)
             return self

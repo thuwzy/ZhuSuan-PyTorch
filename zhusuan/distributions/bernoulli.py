@@ -42,10 +42,10 @@ class Bernoulli(Distribution):
                 "that both are specified or both are not.")
         elif logits is None:
             self._probs: torch.Tensor = torch.as_tensor(probs, dtype=dtype).to(device)
-            self._logits = torch.log(self._probs / (torch.ones(self._probs.shape) - self._probs))
+            self._logits = torch.log(self._probs / (torch.ones(self._probs.shape) - self._probs)).to(device)
         else:  # probs is None
             _logits = torch.as_tensor(logits, dtype=dtype)
-            self._logits = torch.as_tensor(logits)
+            self._logits = torch.as_tensor(logits).to(device)
             assert_same_log_float_dtype([(_logits, "Bernoulli.logits")])
             self._probs: torch.Tensor = torch.sigmoid(_logits).to(device)
         # dtype of probs must be float32 or float64

@@ -23,8 +23,8 @@ class Beta(Distribution):
                  group_ndims=0,
                  device=torch.device('cpu'),
                  **kwargs):
-        self._alpha = torch.as_tensor(alpha, dtype=dtype)
-        self._beta = torch.as_tensor(beta, dtype=dtype)
+        self._alpha = torch.as_tensor(alpha, dtype=dtype).to(device)
+        self._beta = torch.as_tensor(beta, dtype=dtype).to(device)
         check_broadcast(self.alpha, self.beta)
         dtype = assert_same_log_float_dtype([(self._alpha, "Beta.alpha"), (self._beta, "Beta.beta")])
         super(Beta, self).__init__(dtype,
