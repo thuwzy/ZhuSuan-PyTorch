@@ -23,21 +23,28 @@ objectives and advanced gradient estimators (SGVB, VIMCO, etc.).
 * MCMC samplers: Stochastic Gradient MCMC (sgmcmc), etc.
 
 
+
+## example results
+
+| VAE mnist sample                            | VIMCO mnist sample                                |
+| ------------------------------------------- | ------------------------------------------------- |
+| ![sample_x_](./README.assets/sample_x_.png) | ![iw_sample_x_](./README.assets/iw_sample_x_.png) |
+
+
+
+
+
 ## Installation
 
 ZhuSuan-PyTorch is still under development. Before the first stable release (1.0),
 please clone the repository and run
+
 ```shell
 pip install .
 ```
 in the main directory. This will install ZhuSuan and its dependencies
 automatically.  
 
-if you are using [conda](https://anaconda.org/), you could create a new env by run:
-```shell
-conda env create -f environment.yaml
-conda activate zhusuan
-```
 If you are developing ZhuSuan, you may want to install in an
 "editable" or "develop" mode. Please refer to the Contributing section below.
 
@@ -134,7 +141,10 @@ deep generative models.
   [SGVB](examples/bayesian_neural_nets/bnn_vi.py),
   [SGMCMC](examples/bayesian_neural_nets/bnn_sgmcmc.py)
 * Variational Autoencoder (VAE):
-  [SGVB](examples/variational_autoencoder/vae_mnist.py),
+  [SGVB](examples/variational_autoencoder/vae_mnist.py), [VIMCO, Importance weighted](https://github.com/thuwzy/ZhuSuan-PyTorch/blob/main/examples/variational_autoencoder/iwae.py)
+* normlizing_flows
+
+​		[NICE](https://github.com/thuwzy/ZhuSuan-PyTorch/blob/main/examples/normlizing_flows/nice_mnist.py), [flow vae](https://github.com/thuwzy/ZhuSuan-PyTorch/blob/main/examples/normlizing_flows/flow_vae.py)
 
 
 ## Contributing
