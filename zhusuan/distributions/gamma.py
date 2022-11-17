@@ -19,7 +19,7 @@ class Gamma(Distribution):
                  alpha,
                  beta,
                  dtype=None,
-                 is_continues=True,
+                 is_continuous=True,
                  group_ndims=0,
                  device=torch.device('cpu'),
                  **kwargs):
@@ -28,7 +28,7 @@ class Gamma(Distribution):
         check_broadcast(self.alpha, self.beta)
         dtype = assert_same_log_float_dtype([(self._alpha, "Gamma.alpha"), (self._beta, "Gamma.beta")])
         super(Gamma, self).__init__(dtype,
-                                    is_continues,
+                                    is_continuous,
                                     is_reparameterized=False,
                                     # reparameterization trick is not applied for Gamma distribution
                                     group_ndims=group_ndims,

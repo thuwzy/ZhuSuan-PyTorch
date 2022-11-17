@@ -20,7 +20,7 @@ class Poisson(Distribution):
     def __init__(self,
                  rate,
                  dtype=None,
-                 is_continues=True,
+                 is_continuous=True,
                  group_ndims=0,
                  device=torch.device('cpu'),
                  **kwargs):
@@ -33,7 +33,7 @@ class Poisson(Distribution):
         dtype = assert_same_log_float_dtype([(self._rate, "Poisson.mean")])
 
         super(Poisson, self).__init__(dtype,
-                                      is_continues,
+                                      is_continuous,
                                       is_reparameterized=False,
                                       # reparameterization trick is not applied for Poisson distribution
                                       group_ndims=group_ndims,

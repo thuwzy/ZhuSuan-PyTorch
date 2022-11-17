@@ -21,7 +21,7 @@ class StudentT(Distribution):
                  loc=0.,
                  scale=1.,
                  dtype=None,
-                 is_continues=True,
+                 is_continuous=True,
                  group_ndims=0,
                  device=torch.device('cpu'),
                  **kwargs):
@@ -36,7 +36,7 @@ class StudentT(Distribution):
             (self.scale, "StudentT.scale")
         ])
         super(StudentT, self).__init__(dtype,
-                                       is_continues,
+                                       is_continuous,
                                        is_reparameterized=False,
                                        # reparameterization trick is not applied for studentT distribution
                                        group_ndims=group_ndims,

@@ -20,7 +20,7 @@ class Logistic(Distribution):
                  loc,
                  scale,
                  dtype=None,
-                 is_continues=True,
+                 is_continuous=True,
                  group_ndims=0,
                  device=torch.device('cpu'),
                  **kwargs):
@@ -32,7 +32,7 @@ class Logistic(Distribution):
         check_broadcast(self._loc, self.scale)
         dtype = assert_same_log_float_dtype([(self._loc, "Logistic.loc"), (self._scale, "Logistic.scale")])
         super(Logistic, self).__init__(dtype,
-                                       is_continues,
+                                       is_continuous,
                                        is_reparameterized=True,
                                        group_ndims=group_ndims,
                                        device=device,

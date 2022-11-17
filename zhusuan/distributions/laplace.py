@@ -19,7 +19,7 @@ class Laplace(Distribution):
                  loc,
                  scale,
                  dtype=None,
-                 is_continues=True,
+                 is_continuous=True,
                  group_ndims=0,
                  device=torch.device('cpu'),
                  **kwargs):
@@ -28,7 +28,7 @@ class Laplace(Distribution):
         check_broadcast(self.loc, self.scale)
         dtype = assert_same_log_float_dtype([(self._loc, "Laplace.loc"), (self._scale, "Laplace.scale")])
         super(Laplace, self).__init__(dtype,
-                                      is_continues,
+                                      is_continuous,
                                       is_reparameterized=False,
                                       # reparameterization trick is not applied for Laplace distribution
                                       group_ndims=group_ndims,

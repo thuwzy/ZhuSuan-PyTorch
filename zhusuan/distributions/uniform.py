@@ -19,7 +19,7 @@ class Uniform(Distribution):
                  low,
                  high,
                  dtype=None,
-                 is_continues=True,
+                 is_continuous=True,
                  is_reparameterized=True,
                  group_ndims=0,
                  device=torch.device('cpu'),
@@ -29,7 +29,7 @@ class Uniform(Distribution):
         check_broadcast(self.low, self.high)
         dtype = assert_same_log_float_dtype([(self._low, "Uniform.low"), (self._high, "Uniform.high")])
         super(Uniform, self).__init__(dtype,
-                                      is_continues,
+                                      is_continuous,
                                       is_reparameterized,
                                       group_ndims=group_ndims,
                                       device=device,

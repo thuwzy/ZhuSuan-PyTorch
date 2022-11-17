@@ -21,6 +21,7 @@ from zhusuan.framework.bn import BayesianNet
 from zhusuan import distributions
 from zhusuan.variational.importance_weighted_objective import ImportanceWeightedObjective
 from examples.utils import load_mnist_realval, save_img
+
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 hidden_dim = 500
 using_vimco = True
@@ -28,6 +29,7 @@ if using_vimco:
     reparameterization = False
 else:
     reparameterization = True
+
 
 class Generator(BayesianNet):
     def __init__(self, x_dim, z_dim, n_samples):
@@ -59,15 +61,15 @@ class Generator(BayesianNet):
         std = torch.ones([batch_len, self.z_dim])
 
         # the prior of z is sampled from standard normal distribution
-        z = self.sn("Normal",
-                    name="z",
-                    mean=mean,
-                    std=std,
-                    is_reparameterized=False,
-                    n_samples=self.n_samples,
-                    reduce_mean_dims=None,
-                    reduce_sum_dims=[2]
-                    )
+        z = self.normal(
+            name="z",
+            mean=mean,
+            std=std,
+            is_reparameterized=False,
+            n_samples=self.n_samples,
+            reduce_mean_dims=None,
+            reduce_sum_dims=[2]
+        )
         x_probs = self.gen_sq(z)
         self.cache["x_mean"] = x_probs
         bernoulli = distributions.Bernoulli(probs=x_probs, device=device)

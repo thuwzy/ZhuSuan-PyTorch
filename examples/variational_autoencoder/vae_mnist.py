@@ -19,34 +19,34 @@ class Generator(BayesianNet):
         self.x_dim = x_dim
         self.z_dim = z_dim
         self.batch_size = batch_size
-
-        self.fc1 = nn.Linear(z_dim, 500)
-        self.act1 = nn.ReLU()
-        self.fc2 = nn.Linear(500, 500)
-        self.act2 = nn.ReLU()
-
-        self.fc2_ = nn.Linear(500, x_dim)
-        self.act2_ = nn.Sigmoid()
+        self.sequential = nn.Sequential(
+            nn.Linear(z_dim, 500),
+            nn.ReLU(),
+            nn.Linear(500, 500),
+            nn.ReLU(),
+            nn.Linear(500, x_dim),
+            nn.Sigmoid()
+        )
 
     def forward(self, observed):
         self.observe(observed)
         mean = torch.zeros([self.batch_size, self.z_dim])
         std = torch.ones([self.batch_size, self.z_dim])
 
-        z = self.sn('Normal',
-                    name='z',
-                    mean=mean,
-                    std=std,
-                    reparameterize=False,
-                    reduce_mean_dims=[0],
-                    reduce_sum_dims=[1])
-        x_probs = self.act2_(self.fc2_(self.act2(self.fc2(self.act1(self.fc1(z))))))
+        z = self.normal(
+            name='z',
+            mean=mean,
+            std=std,
+            reparameterize=False,
+            reduce_mean_dims=[0],
+            reduce_sum_dims=[1])
+        x_probs = self.sequential(z)
         self.cache['x_mean'] = x_probs
-        sample_x = self.sn('Bernoulli',
-                           name='x',
-                           probs=x_probs,
-                           reduce_mean_dims=[0],
-                           reduce_sum_dims=[1])
+        sample_x = self.bernoulli(
+            name='x',
+            probs=x_probs,
+            reduce_mean_dims=[0],
+            reduce_sum_dims=[1])
         return self
 
 
@@ -57,10 +57,12 @@ class Variational(BayesianNet):
         self.z_dim = z_dim
         self.batch_size = batch_size
 
-        self.fc1 = nn.Linear(x_dim, 500)
-        self.act1 = nn.ReLU()
-        self.fc2 = nn.Linear(500, 500)
-        self.act2 = nn.ReLU()
+        self.sq = nn.Sequential(
+            nn.Linear(x_dim, 500),
+            nn.ReLU(),
+            nn.Linear(500, 500),
+            nn.ReLU()
+        )
 
         self.fc3 = nn.Linear(500, z_dim)
         self.fc4 = nn.Linear(500, z_dim)
@@ -70,18 +72,17 @@ class Variational(BayesianNet):
     def forward(self, observed):
         self.observe(observed)
         x = self.observed['x']
-        z_logits = self.act2(self.fc2(self.act1(self.fc1(x))))
-
+        z_logits = self.sq(x)
         z_mean = self.fc3(z_logits)
         z_std = torch.exp(self.fc4(z_logits))
 
-        z = self.sn('Normal',
-                    name='z',
-                    mean=z_mean,
-                    std=z_std,
-                    reparameterize=True,
-                    reduce_mean_dims=[0],
-                    reduce_sum_dims=[1])
+        z = self.normal(
+            name='z',
+            mean=z_mean,
+            std=z_std,
+            reparameterize=True,
+            reduce_mean_dims=[0],
+            reduce_sum_dims=[1])
         return self
 
 
@@ -121,8 +122,9 @@ def main():
             loss.backward()
             optimizer.step()
             if (step + 1) % 100 == 0:
-                print("Epoch[{}/{}], Step [{}/{}], Loss: {:.4f}".format(epoch + 1, epoch_size, step + 1, num_batches,loss))
-                                                                        #float(loss.clone().detach().numpy())))
+                print("Epoch[{}/{}], Step [{}/{}], Loss: {:.4f}".format(epoch + 1, epoch_size, step + 1, num_batches,
+                                                                        loss))
+                # float(loss.clone().detach().numpy())))
 
     batch_x = x_test[0:64]
     nodes_q = variational({'x': batch_x}).nodes

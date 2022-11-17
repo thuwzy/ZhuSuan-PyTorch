@@ -19,7 +19,7 @@ class Beta(Distribution):
                  alpha,
                  beta,
                  dtype=None,
-                 is_continues=True,
+                 is_continuous=True,
                  group_ndims=0,
                  device=torch.device('cpu'),
                  **kwargs):
@@ -28,7 +28,7 @@ class Beta(Distribution):
         check_broadcast(self.alpha, self.beta)
         dtype = assert_same_log_float_dtype([(self._alpha, "Beta.alpha"), (self._beta, "Beta.beta")])
         super(Beta, self).__init__(dtype,
-                                   is_continues,
+                                   is_continuous,
                                    is_reparameterized=False,
                                    # reparameterization trick is not applied for Beta distribution
                                    group_ndims=group_ndims,

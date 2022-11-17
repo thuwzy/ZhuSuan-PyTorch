@@ -16,14 +16,14 @@ class Exponential(Distribution):
     def __init__(self,
                  rate,
                  dtype=None,
-                 is_continues=True,
+                 is_continuous=True,
                  group_ndims=0,
                  device=torch.device('cpu'),
                  **kwargs):
         self._rate = torch.as_tensor(rate, dtype=dtype).to(device)
         dtype = assert_same_log_float_dtype([(self._rate, "Exponential.rate")])
         super(Exponential, self).__init__(dtype,
-                                          is_continues,
+                                          is_continuous,
                                           is_reparameterized=False,
                                           # reparameterization trick is not applied for Exponential distribution
                                           group_ndims=group_ndims,

@@ -20,7 +20,7 @@ name_mapping = {
 
 
 class BayesianNet(nn.Module):
-    def __init__(self, observed=None):
+    def __init__(self, observed=None, device=torch.device('cpu')):
         """
         The :class:`BayesianNet` class provides a convenient way to construct
         Bayesian networks, i.e., directed graphical models.
@@ -67,7 +67,7 @@ class BayesianNet(nn.Module):
         self._cache = {}
         self._observed = observed if observed else {}
 
-        self._device = torch.device('cpu')  # ! NOTICE: device default as CPU
+        self._device = device
 
     @property
     def nodes(self):
@@ -138,12 +138,13 @@ class BayesianNet(nn.Module):
 
     def stochastic_node(self, distribution, name, n_samples=None, **kwargs):
         """
-        Add a stochastic node in this :class:`BayesianNet` that follows the distribution assigned by the `name` parameter.
+        Add a stochastic node in this :class:`BayesianNet` that follows the distribution assigned by the
+        ``name`` parameter.
 
         :param distribution: The distribution which the node follows.
         :param name: The unique name of the node.
         :param n_samples: number of samples per sample process
-        :param **kwargs: Parameters of the distribution which the node builds with.
+        :param kwargs: Parameters of the distribution which the node builds with.
         :return: A instance(sample) of the node.
         """
         if isinstance(distribution, str):
@@ -182,3 +183,250 @@ class BayesianNet(nn.Module):
         else:
             self._log_joint_cache = self._log_joint()
         return self._log_joint_cache
+
+    # aliases of specific distribution
+    def normal(self,
+               name,
+               mean=0.,
+               std=None,
+               logstd=None,
+               dtype=None,
+               is_continuous=True,
+               is_reparameterized=True,
+               group_ndims=0,
+               n_samples=None,
+               **kwargs):
+        if isinstance(name, str):
+            distribution = Normal(
+                mean=mean,
+                std=std,
+                logstd=logstd,
+                dtype=dtype,
+                is_continuous=is_continuous,
+                is_reparameterized=is_reparameterized,
+                group_ndims=group_ndims,
+                device=self.device,
+                **kwargs
+            )
+            self._nodes[name] = StochasticTensor(self, name, distribution,
+                                                 n_samples=n_samples, **kwargs)
+            return self._nodes[name].tensor
+        else:
+            raise ValueError("name of stochastic_node must be str")
+
+    def bernoulli(self,
+                  name,
+                  logits=None,
+                  probs=None,
+                  dtype=None,
+                  is_continuous=False,
+                  group_ndims=0,
+                  n_samples=None,
+                  **kwargs):
+        if isinstance(name, str):
+            distribution = Bernoulli(
+                logits=logits,
+                probs=probs,
+                dtype=dtype,
+                is_continuous=is_continuous,
+                group_ndims=group_ndims,
+                device=self.device,
+                **kwargs
+            )
+            self._nodes[name] = StochasticTensor(self, name, distribution,
+                                                 n_samples=n_samples, **kwargs)
+            return self._nodes[name].tensor
+        else:
+            raise ValueError("name of stochastic_node must be str")
+
+    def beta(self, name,
+             alpha,
+             beta,
+             dtype=None,
+             is_continuous=True,
+             group_ndims=0,
+             n_samples=None,
+             **kwargs):
+        if isinstance(name, str):
+            distribution = Beta(
+                alpha=alpha,
+                beta=beta,
+                dtype=dtype,
+                is_continuous=is_continuous,
+                group_ndims=group_ndims,
+                device=self.device,
+                **kwargs
+            )
+            self._nodes[name] = StochasticTensor(self, name, distribution,
+                                                 n_samples=n_samples, **kwargs)
+            return self._nodes[name].tensor
+        else:
+            raise ValueError("name of stochastic_node must be str")
+
+    def exponential(self, name,
+                    rate,
+                    dtype=None,
+                    is_continuous=True,
+                    group_ndims=0,
+                    n_samples=None,
+                    **kwargs):
+        if isinstance(name, str):
+            distribution = Exponential(
+                rate=rate,
+                dtype=dtype,
+                is_continuous=is_continuous,
+                group_ndims=group_ndims,
+                device=self.device,
+                **kwargs
+            )
+            self._nodes[name] = StochasticTensor(self, name, distribution,
+                                                 n_samples=n_samples, **kwargs)
+            return self._nodes[name].tensor
+        else:
+            raise ValueError("name of stochastic_node must be str")
+
+    def gamma(self, name,
+              alpha,
+              beta,
+              dtype=None,
+              is_continuous=True,
+              group_ndims=0,
+              n_samples=None,
+              **kwargs):
+        if isinstance(name, str):
+            distribution = Gamma(
+                alpha=alpha,
+                beta=beta,
+                dtype=dtype,
+                is_continuous=is_continuous,
+                group_ndims=group_ndims,
+                device=self.device,
+                **kwargs
+            )
+            self._nodes[name] = StochasticTensor(self, name, distribution,
+                                                 n_samples=n_samples, **kwargs)
+            return self._nodes[name].tensor
+        else:
+            raise ValueError("name of stochastic_node must be str")
+
+    def laplace(self, name,
+                loc,
+                scale,
+                dtype=None,
+                is_continuous=True,
+                group_ndims=0,
+                n_samples=None,
+                **kwargs):
+        if isinstance(name, str):
+            distribution = Laplace(
+                loc=loc,
+                scale=scale,
+                dtype=dtype,
+                is_continuous=is_continuous,
+                group_ndims=group_ndims,
+                device=self.device,
+                **kwargs
+            )
+            self._nodes[name] = StochasticTensor(self, name, distribution,
+                                                 n_samples=n_samples, **kwargs)
+            return self._nodes[name].tensor
+        else:
+            raise ValueError("name of stochastic_node must be str")
+
+    def logistic(self, name,
+                 loc,
+                 scale,
+                 dtype=None,
+                 is_continuous=True,
+                 group_ndims=0,
+                 n_samples=None,
+                 **kwargs):
+        if isinstance(name, str):
+            distribution = Laplace(
+                loc=loc,
+                scale=scale,
+                dtype=dtype,
+                is_continuous=is_continuous,
+                group_ndims=group_ndims,
+                device=self.device,
+                **kwargs
+            )
+            self._nodes[name] = StochasticTensor(self, name, distribution,
+                                                 n_samples=n_samples, **kwargs)
+            return self._nodes[name].tensor
+        else:
+            raise ValueError("name of stochastic_node must be str")
+
+    def poisson(self, name,
+                rate,
+                dtype=None,
+                is_continuous=True,
+                group_ndims=0,
+                n_samples=None,
+                **kwargs):
+        if isinstance(name, str):
+            distribution = Poisson(
+                rate=rate,
+                dtype=dtype,
+                is_continuous=is_continuous,
+                group_ndims=group_ndims,
+                device=self.device,
+                **kwargs
+            )
+            self._nodes[name] = StochasticTensor(self, name, distribution,
+                                                 n_samples=n_samples, **kwargs)
+            return self._nodes[name].tensor
+        else:
+            raise ValueError("name of stochastic_node must be str")
+
+    def studentT(self, name,
+                 df,
+                 loc=0.,
+                 scale=1.,
+                 dtype=None,
+                 is_continuous=True,
+                 group_ndims=0,
+                 n_samples=None,
+                 **kwargs):
+        if isinstance(name, str):
+            distribution = StudentT(
+                df=df,
+                loc=loc,
+                scale=scale,
+                dtype=dtype,
+                is_continuous=is_continuous,
+                group_ndims=group_ndims,
+                device=self.device,
+                **kwargs
+            )
+            self._nodes[name] = StochasticTensor(self, name, distribution,
+                                                 n_samples=n_samples, **kwargs)
+            return self._nodes[name].tensor
+        else:
+            raise ValueError("name of stochastic_node must be str")
+
+    def uniform(self, name,
+                low,
+                high,
+                dtype=None,
+                is_continuous=True,
+                is_reparameterized=True,
+                group_ndims=0,
+                n_samples=None,
+                **kwargs):
+        if isinstance(name, str):
+            distribution = Uniform(
+                low=low,
+                high=high,
+                dtype=dtype,
+                is_continuous=is_continuous,
+                is_reparameterized=is_reparameterized,
+                group_ndims=group_ndims,
+                device=self.device,
+                **kwargs
+            )
+            self._nodes[name] = StochasticTensor(self, name, distribution,
+                                                 n_samples=n_samples, **kwargs)
+            return self._nodes[name].tensor
+        else:
+            raise ValueError("name of stochastic_node must be str")

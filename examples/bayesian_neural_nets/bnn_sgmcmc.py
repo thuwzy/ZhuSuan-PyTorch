@@ -24,7 +24,7 @@ class Net(BayesianNet):
         self.w_logstds = []
 
         for i, (n_in, n_out) in enumerate(zip(self.layer_sizes[:-1], self.layer_sizes[1:])):
-            w_logstd_ = torch.nn.init.constant_(torch.empty([n_out, n_in + 1], dtype=torch.float32), val = 0.0)
+            w_logstd_ = torch.nn.init.constant_(torch.empty([n_out, n_in + 1], dtype=torch.float32), val=0.0)
             _name = 'w_logstd_' + str(i)
             self.__dict__[_name] = w_logstd_
             self.w_logstds.append(w_logstd_)
@@ -37,13 +37,13 @@ class Net(BayesianNet):
         batch_size = x.shape[0]
 
         for i, (n_in, n_out) in enumerate(zip(self.layer_sizes[:-1], self.layer_sizes[1:])):
-            w = self.sn('Normal',
-                        name='w' + str(i),
-                        mean=torch.zeros([n_out, n_in + 1]),
-                        logstd=self.w_logstds[i],
-                        group_ndims=2,
-                        n_samples=self.n_particles,
-                        reduce_mean_dims=[0])
+            w = self.normal(
+                name='w' + str(i),
+                mean=torch.zeros([n_out, n_in + 1]),
+                logstd=self.w_logstds[i],
+                group_ndims=2,
+                n_samples=self.n_particles,
+                reduce_mean_dims=[0])
             w = torch.unsqueeze(w, 1)
             w = w.repeat([1, batch_size, 1, 1])
             h = torch.cat([h, torch.ones([*h.shape[:-1], 1]).to(self.device)], -1)
@@ -60,13 +60,13 @@ class Net(BayesianNet):
         y_pred = torch.mean(y_mean, 0)
         self.cache['rmse'] = torch.sqrt(torch.mean((y - y_pred) ** 2))
 
-        self.sn('Normal',
-                name='y',
-                mean=y_mean,
-                logstd=self.y_logstd,
-                reparameterize=True,
-                reduce_mean_dims=[0, 1],
-                multiplier=456)
+        self.normal(
+            name='y',
+            mean=y_mean,
+            logstd=self.y_logstd,
+            reparameterize=True,
+            reduce_mean_dims=[0, 1],
+            multiplier=456)
         return self
 
 
@@ -144,4 +144,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
