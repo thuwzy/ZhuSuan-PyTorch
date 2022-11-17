@@ -7,7 +7,8 @@ from zhusuan.invertible import RevNet
 
 
 class MaskedLinear(nn.Linear):
-    """ MADE building block layer """
+    """ MADE building block layer
+    """
 
     def __init__(self, input_size, n_outputs, mask, cond_label_size=None):
         super().__init__(input_size, n_outputs)
@@ -26,19 +27,57 @@ class MaskedLinear(nn.Linear):
 
 class MADE(RevNet):
     # maily from normalizing_flows/maf.py
+    """
+    MADE class
+
+    :param input_size: a scalar; dim of inputs
+    :param hidden_size: a scalar; dim of hidden layers
+    :param n_hidden: a scalar; number of hidden layers
+    :param activation: a str; activation function to use
+    :param input_order: a str or tensor; variable order for creating the autoregressive masks (sequential|random)
+                        or the order flipped from the previous layer in a stack of mades
+    :param conditional: a bool; whether model is conditional
+    """
+
+    def __init__(self, input_size, hidden_size, n_hidden, cond_label_size=None,
+                 input_order="sequential", input_degrees=None, activation="relu"):
+
+        super(MADE, self).__init__()
+        self.register_buffer("base_dist_mean", torch.zeros(input_size))
+        self.register_buffer("base_dist_var", torch.ones(input_size))
+
+        # create mask
+        masks, self.input_degrees = self.create_mask(input_size, hidden_size, n_hidden, input_order, input_degrees)
+
+        # setup activation
+        if activation == 'relu':
+            activation_fn = nn.ReLU()
+        elif activation == "tanh":
+            activation_fn = nn.Tanh()
+        else:
+            raise ValueError("Invalid activation function")
+
+        # construct model
+        self.net_input = MaskedLinear(input_size, hidden_size, masks[0], cond_label_size)
+        self.net = []
+        for m in masks[1:-1]:
+            self.net += [activation_fn, MaskedLinear(hidden_size, hidden_size, m)]
+
+        self.net += [activation_fn, MaskedLinear(hidden_size, 2 * input_size, masks[-1].repeat(2, 1))]
+        self.net = nn.Sequential(*self.net)
+
     @staticmethod
     def create_mask(input_size, hidden_size, n_hidden, input_order='sequential', input_degrees=None):
         """
         Mask generator for MADE & MAF (see MADE paper sec 4:https://arxiv.org/abs/1502.03509)
-        Args:
-            input_size:
-            hidden_size:
-            n_hidden:
-            input_order:
-            input_degrees:
+
+        :param input_size: dim of inputs
+        :param hidden_size: dim of hidden layers
+        :param n_hidden: number of hidden layers
+        :param input_order: variable order for creating the autoregressive masks (sequential|random)
+        :param input_degrees: degrees provide by user
 
         Returns: List of masks
-
         """
         degrees = []
         if input_order == "sequential":
@@ -63,42 +102,6 @@ class MADE(RevNet):
         for (d0, d1) in zip(degrees[:-1], degrees[1:]):
             masks += [(d1.unsqueeze(-1) >= d0.unsqueeze(0)).float()]
         return masks, degrees[0]
-
-    def __init__(self, input_size, hidden_size, n_hidden, cond_label_size=None,
-                 input_order="sequential", input_degrees=None, activation="relu"):
-        """
-        Args:
-            input_size -- scalar; dim of inputs
-            hidden_size -- scalar; dim of hidden layers
-            n_hidden -- scalar; number of hidden layers
-            activation -- str; activation function to use
-            input_order -- str or tensor; variable order for creating the autoregressive masks (sequential|random)
-                            or the order flipped from the previous layer in a stack of mades
-            conditional -- bool; whether model is conditional
-        """
-        super(MADE, self).__init__()
-        self.register_buffer("base_dist_mean", torch.zeros(input_size))
-        self.register_buffer("base_dist_var", torch.ones(input_size))
-
-        # create mask
-        masks, self.input_degrees = self.create_mask(input_size, hidden_size, n_hidden, input_order, input_degrees)
-
-        # setup activation
-        if activation == 'relu':
-            activation_fn = nn.ReLU()
-        elif activation == "tanh":
-            activation_fn = nn.Tanh()
-        else:
-            raise ValueError("Invalid activation function")
-
-        # construct model
-        self.net_input = MaskedLinear(input_size, hidden_size, masks[0], cond_label_size)
-        self.net = []
-        for m in masks[1:-1]:
-            self.net += [activation_fn, MaskedLinear(hidden_size, hidden_size, m)]
-
-        self.net += [activation_fn, MaskedLinear(hidden_size, 2 * input_size, masks[-1].repeat(2, 1))]
-        self.net = nn.Sequential(*self.net)
 
     def _forward(self, x, cond_y=None, **kwargs):
         # MAF eq 4 -- return mean and log std

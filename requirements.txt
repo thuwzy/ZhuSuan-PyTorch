@@ -1,4 +1,5 @@
+numpy>=1.19.1
+torch>=1.6.0
 six
+pillow
 matplotlib
-torch
-numpy

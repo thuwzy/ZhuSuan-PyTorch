@@ -11,14 +11,14 @@
 ZhuSuan-PyTorch is a python probabilistic programming library for
 **Bayesian deep learning**, which conjoins the complimentary advantages of
 Bayesian methods and deep learning. ZhuSuan-Pytorch is built upon
-[PyTorch](https://pytorch.org/). Unlike existing deep learning
-libraries, which are mainly designed for deterministic neural networks and
-supervised tasks, ZhuSuan-PyTorch provides deep learning style primitives and
+[PyTorch](https://pytorch.org/). Benefit from the Dynamic graphs feature of PyTorch, ZhuSuan-PyTorch 
+could easily build Bayesian Networks by less code.
+ZhuSuan-PyTorch provides deep learning style primitives and
 algorithms for building probabilistic models and applying Bayesian inference.
 The supported inference algorithms include:
 
 * Variational inference with programmable variational posteriors, various
-objectives and advanced gradient estimators (SGVB, etc.).
+objectives and advanced gradient estimators (SGVB, VIMCO, etc.).
 
 * MCMC samplers: Stochastic Gradient MCMC (sgmcmc), etc.
 
@@ -27,12 +27,17 @@ objectives and advanced gradient estimators (SGVB, etc.).
 
 ZhuSuan-PyTorch is still under development. Before the first stable release (1.0),
 please clone the repository and run
-```
+```shell
 pip install .
 ```
 in the main directory. This will install ZhuSuan and its dependencies
 automatically.  
 
+if you are using [conda](https://anaconda.org/), you could create a new env by run:
+```shell
+conda env create -f environment.yaml
+conda activate zhusuan
+```
 If you are developing ZhuSuan, you may want to install in an
 "editable" or "develop" mode. Please refer to the Contributing section below.
 
@@ -40,7 +45,8 @@ If you are developing ZhuSuan, you may want to install in an
 
 * [Tutorials and API docs](https://zhusuan-pytorch.readthedocs.io/)
 
-## Examples
+## Examples & demo code
+
 
 We provide examples on traditional hierarchical Bayesian models and recent
 deep generative models.
