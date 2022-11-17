@@ -47,6 +47,85 @@ If you are developing ZhuSuan, you may want to install in an
 
 ## Examples & demo code
 
+### Distribution
+
+We can create a univariate distribution(Normal as example) and sample from it in ZhuSuan by:
+
+```python
+import zhusuan as zs
+dist = zs.distributions.Normal(mean=[0., 1.], logstd=[0., 0.])
+sample = dist.sample()
+print(sample.shape)
+# torch.Size([2])
+samples = dist.sample(10)
+print(samples.shape)
+# torch.Size([10, 2])
+```
+
+
+
+## BayesianNet
+
+We can build Bayesian networks as a class by inherit `BayesianNet` class.
+
+```python
+from zhusuan.framework.bn import BayesianNet
+class Net(BayesianNet):
+    def __init__(self):
+        # Initialize...
+    def forward(self, observed):
+        # Forward propagation...
+```
+
+using `stochastic_node` method to register a `StochasticTensor`  in the Bayesian network, witch follows a spesefic distribution. we could get the node by name we seted.
+
+```python
+import torch
+from zhusuan.distributions import Normal
+from zhusuan.framework.bn import BayesianNet
+model = BayesianNet()
+# method listed below are equivalent, w is an sample from passed distribution
+# method1
+w = model.stochastic_node('Normal', name="w", mean=torch.zeros([5]), std=1.)
+
+# method2
+normal = Normal(mean=torch.zeros([5]), std=1.)
+w = model.stochastic_node(normal, name="w")
+
+# method3
+normal = Normal(mean=torch.zeros([5]), std=1.)
+w = model.sn(normal, name="w")
+
+# get the registered node
+print(model.nodes["w"])
+```
+
+we also need to describe the relationship between nodes, in our framework we define it in `forward` method. A basic `bayesian_linear_regression` show as below:
+
+```python
+class bayesian_linear_regression(BayesianNet):
+    def __init__(self, alpha, beta):
+        super().__init__()
+        self.alpha = alpha
+        self.beta = beta
+
+    def forward(self, observed):
+        self.observe(observed)
+        x = self.observed['x']
+        w = self.stochastic_node('Normal', name="w", mean=torch.zeros([x.shape[-1]]), std=alpha)
+        y_mean = torch.sum(w * x, dim=-1)
+        y = self.stochastic_node('Normal', name="y", mean=y_mean, std=beta)
+        return self
+```
+
+for training or infrence, we just need to instantiate the class and pass observed variables using `dict`.
+
+```python
+model = bayesian_linear_regression(alpha, beta)
+model({'w': w_obs, 'x': x})
+```
+
+see also [detailed introduction](https://zhusuan-pytorch.readthedocs.io/en/latest/tutorials/concepts.html).
 
 We provide examples on traditional hierarchical Bayesian models and recent
 deep generative models.

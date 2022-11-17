@@ -1,0 +1,15 @@
+name: zhusuan
+channels:
+  - pytorch
+  - defaults
+dependencies:
+  - python=3.8.10
+  - pip=20.3
+  - pytorch>=1.6.0
+  - numpy>=1.19.1
+  - pip:
+    - setuptools
+    - pillow
+    - matplotlib
+    - six
+    - .

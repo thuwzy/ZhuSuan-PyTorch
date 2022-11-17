@@ -127,8 +127,11 @@ keep two kinds of nodes:
   class in the above code),  stochastic nodes can be also constructed by::
 
         from zhusuan.distributions import Normal
+
         normal = Normal(mean=torch.zeros([x.shape[-1]]), std=alpha)
         w = self.stochastic_node(normal, name="w")
+        # or using alias of stochastic_node method
+        w = self.sn(normal, name="w")
 
   Here ``w`` is a :class:`~zhusuan.framework.stochastic_tensor.StochasticTensor` that follows
   the :class:`~zhusuan.distributions.normal.Normal` distribution, it will be registered to 
