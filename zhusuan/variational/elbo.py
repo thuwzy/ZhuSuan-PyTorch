@@ -66,10 +66,16 @@ class ELBO(nn.Module):
         """
         log_joint_ = None
         for n_name in nodes.keys():
+            '''
             try:
                 log_joint_ += nodes[n_name].log_prob()
             except:
                 log_joint_ = nodes[n_name].log_prob()  # TODO: figure it out
+            '''
+            if log_joint_ is None:
+                log_joint_ = nodes[n_name].log_prob()
+            else:
+                log_joint_ += nodes[n_name].log_prob()
         return log_joint_
 
     def forward(self, observed, reduce_mean=True, **kwargs):
@@ -98,7 +104,8 @@ class ELBO(nn.Module):
 
             # Transform
             output, log_det = self.transform(flow_inputs)
-            assert len(output) == len(self.transform_var)  # All transformed var should be returned
+            # All transformed var should be returned
+            assert len(output) == len(self.transform_var)
             for k in self.transform_var:
                 _transformed_inputs[k] = output[k]
 
@@ -242,4 +249,5 @@ class EvidenceLowerBoundObjective(ELBO):
     """
 
     def __init__(self, generator, variational, estimator='sgvb', transform=None, transform_var=[], auxillary_var=[]):
-        super().__init__(generator, variational, estimator, transform, transform_var, auxillary_var)
+        super().__init__(generator, variational, estimator,
+                         transform, transform_var, auxillary_var)
