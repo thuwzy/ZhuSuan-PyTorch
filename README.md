@@ -142,9 +142,7 @@ deep generative models.
   [SGMCMC](examples/bayesian_neural_nets/bnn_sgmcmc.py)
 * Variational Autoencoder (VAE):
   [SGVB](examples/variational_autoencoder/vae_mnist.py), [VIMCO, Importance weighted](https://github.com/thuwzy/ZhuSuan-PyTorch/blob/main/examples/variational_autoencoder/iwae.py)
-* normlizing_flows
-
-​		[NICE](https://github.com/thuwzy/ZhuSuan-PyTorch/blob/main/examples/normlizing_flows/nice_mnist.py), [flow vae](https://github.com/thuwzy/ZhuSuan-PyTorch/blob/main/examples/normlizing_flows/flow_vae.py)
+* normlizing_flows	[NICE](https://github.com/thuwzy/ZhuSuan-PyTorch/blob/main/examples/normlizing_flows/nice_mnist.py), [flow vae](https://github.com/thuwzy/ZhuSuan-PyTorch/blob/main/examples/normlizing_flows/flow_vae.py)
 
 
 ## Contributing
